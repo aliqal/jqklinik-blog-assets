@@ -602,7 +602,7 @@ html body #jq-archive {
 }
 
 #jq-blog-extra .jq-blog-cta-sec { background: var(--jqb-ink); color: var(--jqb-cream); }
-#jq-blog-extra .jq-blog-cta { max-width: 720px; margin: 0 auto; text-align: center; }
+#jq-blog-extra .jq-blog-cta { max-width: 820px; margin: 0; text-align: left; }
 #jq-blog-extra .jq-blog-cta .jq-eyebrow { color: rgba(244,241,234,.55); }
 #jq-blog-extra .jq-blog-cta-h {
   font-family: var(--jqb-serif); font-weight: 400;
@@ -612,9 +612,9 @@ html body #jq-archive {
 #jq-blog-extra .jq-blog-cta-h em { font-style: italic; color: rgba(244,241,234,.7); font-weight: 300; }
 #jq-blog-extra .jq-blog-cta-lede {
   font-family: var(--jqb-serif); font-size: 1.05rem; line-height: 1.65;
-  color: rgba(244,241,234,.78); max-width: 56ch; margin: 0 auto 32px;
+  color: rgba(244,241,234,.78); max-width: 56ch; margin: 0 0 32px;
 }
-#jq-blog-extra .jq-blog-cta-btns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+#jq-blog-extra .jq-blog-cta-btns { display: flex; gap: 14px; justify-content: flex-start; flex-wrap: wrap; }
 #jq-blog-extra .jq-btn {
   display: inline-flex; align-items: center; gap: 10px;
   padding: 14px 24px; border-radius: 999px;
@@ -772,7 +772,7 @@ html body #jq-archive {
         + '<h3 class="jq-blog-cta-h">Frågor om <em>din situation?</em></h3>'
         + '<p class="jq-blog-cta-lede">Boka en konsultation hos leg. specialisttandläkare med estetik-inriktning. Ingen förskottsbetalning.</p>'
         + '<div class="jq-blog-cta-btns">'
-        + '<a class="jq-btn jq-btn--solid" href="/boka">Boka konsultation <span>→</span></a>'
+        + '<a class="jq-btn jq-btn--solid" href="/boka">Boka konsultation</a>'
         + '<a class="jq-btn jq-btn--ghost" href="tel:+46317135784">031-713 57 84</a>'
         + '</div></div></div></section>';
       const relatedShell = isPost ? '<section class="jq-sec jq-blog-related-sec" id="jq-blog-related-shell"></section>' : '';
@@ -787,21 +787,23 @@ html body #jq-archive {
 
     function fetchRelatedPosts() {
       try {
-        fetch("/_api/communities-blog-node-api/_api/posts?paging.limit=4&fieldsets=categories", {
-          headers: { Accept: "application/json" }
+        fetch("/_api/blog-frontend-adapter-public/v2/post-feed-page?includeContent=false&lang=sv&page=1&pageSize=6", {
+          headers: { Accept: "application/json" },
+          credentials: "same-origin"
         }).then(function (r) { return r.ok ? r.json() : null; }).then(function (data) {
           const shell = document.getElementById("jq-blog-related-shell");
           if (!shell) return;
-          const posts = (data && data.posts) || [];
+          var raw = (data && data.postFeedPage && data.postFeedPage.posts && data.postFeedPage.posts.posts) || [];
+          const posts = raw;
           const currentSlug = (window.location.pathname.split("/").pop() || "").toLowerCase();
           const filtered = posts.filter(function (p) {
             return (p.slug || "").toLowerCase() !== currentSlug;
           }).slice(0, 3);
           if (filtered.length === 0) { shell.remove(); return; }
           const cards = filtered.map(function (p) {
-            const url = "/post/" + (p.slug || "");
-            const cat = (p.categories && p.categories[0] && p.categories[0].label) || "Artikel";
-            const img = (p.coverImage && (p.coverImage.url || p.coverImage)) || (p.media && p.media.wixMedia && p.media.wixMedia.image && p.media.wixMedia.image.url) || "";
+            const url = p.url ? p.url.path : "/post/" + (p.slug || "");
+            const cat = "Artikel";
+            const img = getCoverUrl(p);
             const title = (p.title || "").replace(/"/g, "&quot;");
             const imgHtml = img ? '<div class="jq-blog-related-img"><img src="' + img + '" alt="' + title + '" loading="lazy"></div>' : "";
             return '<article class="jq-blog-related-card"><a class="jq-blog-related-link" href="' + url + '">'
@@ -843,6 +845,10 @@ html body #jq-archive {
     }
     function getCoverUrl(p) {
       try {
+        // New blog-frontend-adapter-public format
+        if (p.media && p.media.embedMedia && p.media.embedMedia.thumbnail && p.media.embedMedia.thumbnail.url) {
+          return p.media.embedMedia.thumbnail.url;
+        }
         if (p.coverImage) {
           if (typeof p.coverImage === "string") return p.coverImage;
           if (p.coverImage.src && p.coverImage.src.url) return p.coverImage.src.url;
@@ -1051,9 +1057,8 @@ html body #jq-archive {
         + '<p class="jq-blog-hero-lede">Laddar artiklar…</p>'
         + '</div></section>';
 
-      // Fetch posts via Wix Blog client-API. Endpoint funkar från sajt-kontext
-      // (auto-headers inkluderar instance). Limit 50 räcker för archive.
-      const apiUrl = "/_api/communities-blog-node-api/_api/posts?paging.limit=50&fieldsets=categories,owner&sort=published";
+      // Fetch posts via Wix Blog public adapter. Kräver browser-session (same-origin).
+      const apiUrl = "/_api/blog-frontend-adapter-public/v2/post-feed-page?includeContent=false&lang=sv&page=1&pageSize=50";
       console.log("[JQ.blog] fetching:", apiUrl);
       try {
         fetch(apiUrl, {
@@ -1064,10 +1069,12 @@ html body #jq-archive {
           if (!r.ok) throw new Error("HTTP " + r.status);
           return r.json();
         }).then(function (data) {
-          // Wix returnerar antingen { posts: [...] } eller en rå array
           var posts = [];
-          if (data && data.posts) posts = data.posts;
-          else if (Array.isArray(data)) posts = data;
+          if (data && data.postFeedPage && data.postFeedPage.posts && data.postFeedPage.posts.posts) {
+            posts = data.postFeedPage.posts.posts;
+          } else if (data && data.posts && Array.isArray(data.posts)) {
+            posts = data.posts;
+          }
           console.log("[JQ.blog] fetched", posts.length, "posts");
           // Sortera nyast → äldst (säker fallback)
           posts.sort(function (a, b) {
@@ -1241,4 +1248,3 @@ html body #jq-archive {
     try { console.error("[JQ.blog] OUTER blog-IIFE failed:", e); } catch (_) {}
   }
 })();
-
