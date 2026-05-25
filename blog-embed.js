@@ -709,6 +709,128 @@ html body #jq-archive {
   font-size: 1.18rem; line-height: 1.2;
   letter-spacing: -.012em; color: var(--jqb-ink); margin: 0;
 }
+
+/* === FORCE FULL-WIDTH LEFT-ALIGNED POST CONTENT ===================== */
+/* Övertrumfar Wix defaults + tidigare max-width:65ch/22ch som gjorde
+   texten smal+centrerad. Container = 720px (läsbar long-form), allt
+   inom är vänsterställt och tar full bredd. */
+${isPost ? `
+html body [data-hook="post-page-root"] {
+  max-width: 1200px !important;
+  margin: 0 auto !important;
+  padding: 0 !important;
+}
+html body [data-hook="post-content"],
+html body .post-page-content,
+html body article[class*="post-content"] {
+  max-width: 720px !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+  padding: 0 24px !important;
+  text-align: left !important;
+  box-sizing: border-box !important;
+}
+html body [data-hook="post-content"] > *,
+html body .post-page-content > *,
+html body [data-hook="post-content"] p,
+html body [data-hook="post-content"] h1,
+html body [data-hook="post-content"] h2,
+html body [data-hook="post-content"] h3,
+html body [data-hook="post-content"] h4,
+html body [data-hook="post-content"] ul,
+html body [data-hook="post-content"] ol,
+html body [data-hook="post-content"] li,
+html body [data-hook="post-content"] blockquote,
+html body [data-hook="post-content"] figure,
+html body .post-page-content p,
+html body .post-page-content h2,
+html body .post-page-content h3 {
+  max-width: 100% !important;
+  width: 100% !important;
+  text-align: left !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  box-sizing: border-box !important;
+}
+/* Post title + meta också vänsterställt + 720px */
+html body [data-hook="post-title"],
+html body [data-hook="post-description"],
+html body [data-hook="post-page-root"] ul:has([data-hook="time-ago"]) {
+  max-width: 720px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding-left: 24px !important;
+  padding-right: 24px !important;
+  text-align: left !important;
+}
+/* Hero image kan vara bredare än text (1100px enligt befintlig regel) */
+html body [data-hook="post-hero-image"] {
+  max-width: 1100px !important;
+  margin: clamp(20px, 3vw, 36px) auto clamp(32px, 5vw, 56px) !important;
+  text-align: center !important;
+}
+html body [data-hook="post-hero-image"] img {
+  max-width: 100% !important;
+  width: 100% !important;
+  height: auto !important;
+}
+/* Inline IMAGE-nodes i body (mid-article) — center + full text-width */
+html body [data-hook="post-content"] figure,
+html body [data-hook="post-content"] [data-hook="imageViewer"],
+html body [data-hook="post-content"] [data-hook="image-data-wrapper"],
+html body [data-hook="post-content"] .image-viewer-image-component,
+html body [data-hook="post-content"] img {
+  max-width: 100% !important;
+  width: 100% !important;
+  height: auto !important;
+  margin: clamp(24px, 3vw, 40px) 0 !important;
+  border-radius: 4px !important;
+  display: block !important;
+}
+/* Blockquote / TL;DR-block */
+html body [data-hook="post-content"] blockquote {
+  border-left: 3px solid var(--jqb-accent) !important;
+  background: var(--jqb-cream) !important;
+  padding: clamp(20px, 2.4vw, 28px) clamp(20px, 2.4vw, 28px) !important;
+  margin: clamp(24px, 3vw, 36px) 0 !important;
+  font-style: italic !important;
+  color: var(--jqb-ink-2) !important;
+}
+/* Bulleted/Ordered lists — synliga prickar/siffror */
+html body [data-hook="post-content"] ul {
+  list-style: disc outside !important;
+  padding-left: clamp(20px, 2vw, 28px) !important;
+  margin: clamp(16px, 2vw, 24px) 0 !important;
+}
+html body [data-hook="post-content"] ol {
+  list-style: decimal outside !important;
+  padding-left: clamp(20px, 2vw, 28px) !important;
+  margin: clamp(16px, 2vw, 24px) 0 !important;
+}
+html body [data-hook="post-content"] li {
+  margin: clamp(4px, .6vw, 8px) 0 !important;
+}
+/* In-content CTA-block (PARAGRAPH med [data-jq-cta] attribut eller
+   klassnamn jq-inline-cta) — full-width mörk box med knapp */
+html body [data-hook="post-content"] [data-jq-cta],
+html body [data-hook="post-content"] .jq-inline-cta {
+  background: var(--jqb-ink) !important;
+  color: var(--jqb-cream) !important;
+  padding: clamp(24px, 3vw, 36px) clamp(24px, 3vw, 36px) !important;
+  margin: clamp(32px, 4vw, 48px) 0 !important;
+  border-radius: 4px !important;
+  text-align: left !important;
+}
+html body [data-hook="post-content"] [data-jq-cta] a,
+html body [data-hook="post-content"] .jq-inline-cta a {
+  color: var(--jqb-cream) !important;
+  text-decoration: underline !important;
+  text-underline-offset: 4px !important;
+  border-bottom: none !important;
+  font-weight: 500 !important;
+}
+` : ""}
+
     `;
     document.head.appendChild(css);
 
