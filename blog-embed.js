@@ -356,21 +356,21 @@ html body #jq-archive {
 
 /* HERO */
 #jq-archive .jq-blog-hero {
-  padding: clamp(60px, 10vh, 140px) 0 clamp(40px, 5vw, 72px);
+  padding: clamp(40px, 6vh, 80px) 0 clamp(32px, 4vw, 56px);
 }
 #jq-archive .jq-blog-hero-h {
   font-family: var(--jqb-serif); font-weight: 400;
-  font-size: clamp(2.6rem, 6.5vw, 6rem);
+  font-size: clamp(2.2rem, 5vw, 4.5rem);
   line-height: 1.02; letter-spacing: -.028em;
-  color: var(--jqb-ink); margin: 18px 0 clamp(28px, 3.4vw, 44px);
+  color: var(--jqb-ink); margin: 14px 0 clamp(22px, 2.6vw, 36px);
   max-width: 16ch;
 }
 #jq-archive .jq-blog-hero-h em { font-style: italic; color: currentColor; }
 #jq-archive .jq-blog-hero-lede {
   font-family: var(--jqb-serif);
-  font-size: clamp(1.05rem, 1.5vw, 1.3rem); line-height: 1.55;
+  font-size: clamp(1rem, 1.2vw, 1.15rem); line-height: 1.55;
   color: var(--jqb-stone); max-width: 56ch;
-  margin: 0 0 clamp(24px, 3vw, 36px);
+  margin: 0 0 clamp(20px, 2.4vw, 30px);
 }
 #jq-archive .jq-blog-hero-meta {
   display: flex; gap: 14px; align-items: center;
@@ -411,7 +411,8 @@ html body #jq-archive {
 }
 #jq-archive .jq-blog-fcard { margin: 0; }
 #jq-archive .jq-blog-fcard--big { grid-column: 1 / -1; }
-#jq-archive .jq-blog-fcard--big .jq-blog-fcard-link { grid-template-columns: 1.4fr 1fr; }
+/* Big card: 2-column (image left, text right) only when image present */
+#jq-archive .jq-blog-fcard--big .jq-blog-fcard-link:has(.jq-blog-fcard-img) { grid-template-columns: 1.4fr 1fr; }
 #jq-archive .jq-blog-fcard-link {
   display: grid; grid-template-columns: 1fr;
   gap: clamp(20px, 2.5vw, 36px);
@@ -444,6 +445,10 @@ html body #jq-archive {
 }
 #jq-archive .jq-blog-fcard--big .jq-blog-fcard-h {
   font-size: clamp(1.9rem, 3.8vw, 3.4rem); letter-spacing: -.022em;
+}
+/* No-image big card: larger full-width title, constrained width */
+#jq-archive .jq-blog-fcard--big .jq-blog-fcard-link:not(:has(.jq-blog-fcard-img)) .jq-blog-fcard-h {
+  font-size: clamp(2.4rem, 5vw, 4.2rem); max-width: 20ch;
 }
 #jq-archive .jq-blog-fcard-lead {
   font-family: var(--jqb-serif); font-size: 1rem; line-height: 1.55;
