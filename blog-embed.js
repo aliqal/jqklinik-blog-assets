@@ -404,7 +404,7 @@ html body #jq-archive {
 }
 
 /* FEATURED 3-CARDS */
-#jq-archive .jq-blog-featured { padding: clamp(48px, 6vw, 96px) 0 clamp(36px, 5vw, 72px); }
+#jq-archive .jq-blog-featured { padding: clamp(28px, 3vw, 44px) 0 clamp(28px, 3.5vw, 48px); border-top: 1px solid var(--jqb-line); }
 #jq-archive .jq-blog-featured-grid {
   display: grid; grid-template-columns: 1fr 1fr;
   gap: clamp(24px, 3vw, 48px);
@@ -446,9 +446,9 @@ html body #jq-archive {
 #jq-archive .jq-blog-fcard--big .jq-blog-fcard-h {
   font-size: clamp(1.9rem, 3.8vw, 3.4rem); letter-spacing: -.022em;
 }
-/* No-image big card: larger full-width title, constrained width */
+/* No-image big card: same size as regular big card, constrained width */
 #jq-archive .jq-blog-fcard--big .jq-blog-fcard-link:not(:has(.jq-blog-fcard-img)) .jq-blog-fcard-h {
-  font-size: clamp(2.4rem, 5vw, 4.2rem); max-width: 20ch;
+  font-size: clamp(1.9rem, 3.8vw, 3.4rem); max-width: 26ch;
 }
 #jq-archive .jq-blog-fcard-lead {
   font-family: var(--jqb-serif); font-size: 1rem; line-height: 1.55;
