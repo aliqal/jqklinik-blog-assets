@@ -555,6 +555,46 @@ html body #jq-archive {
   .post-page-content { padding: 0 32px; }
 }
 
+/* === MID-ARTIKEL CTA (injectas efter 2:a H2) ======================== */
+.jq-mid-cta {
+  border-top: 1px solid var(--jqb-line);
+  border-bottom: 1px solid var(--jqb-line);
+  padding: clamp(24px, 3.5vw, 36px) 0;
+  margin: clamp(32px, 5vw, 52px) 0;
+}
+.jq-mid-cta-eyebrow {
+  display: block; font-family: var(--jqb-sans); font-size: 10px;
+  letter-spacing: .26em; text-transform: uppercase; color: var(--jqb-stone);
+  margin-bottom: 12px;
+}
+.jq-mid-cta-t {
+  font-family: var(--jqb-serif); font-weight: 400;
+  font-size: clamp(1.2rem, 1.8vw, 1.55rem); line-height: 1.2;
+  color: var(--jqb-ink); margin: 0 0 18px;
+}
+.jq-mid-cta-t em { font-style: italic; color: var(--jqb-stone); font-weight: 300; }
+.jq-mid-cta-btns { display: flex; gap: 12px; flex-wrap: wrap; }
+.jq-mid-cta-btn {
+  display: inline-flex; align-items: center;
+  padding: 11px 22px; border-radius: 999px;
+  font-family: var(--jqb-sans); font-size: 11px; font-weight: 500;
+  letter-spacing: .16em; text-transform: uppercase; text-decoration: none;
+  transition: background .25s var(--jqb-ease), color .25s var(--jqb-ease), border-color .25s var(--jqb-ease);
+}
+.jq-mid-cta-btn--primary { background: var(--jqb-ink); color: var(--jqb-cream); }
+.jq-mid-cta-btn--primary:hover { background: #000; }
+.jq-mid-cta-btn--secondary { background: transparent; color: var(--jqb-ink); border: 1px solid var(--jqb-line); }
+.jq-mid-cta-btn--secondary:hover { border-color: var(--jqb-ink); }
+
+/* === INTERNA KEYWORD-LÄNKAR (auto-inject vid första förekomst) ======= */
+.jq-kw-link {
+  color: var(--jqb-ink) !important;
+  text-decoration: none !important;
+  border-bottom: 1px solid var(--jqb-line) !important;
+  transition: border-color .2s;
+}
+.jq-kw-link:hover { border-bottom-color: var(--jqb-ink) !important; }
+
 /* === JQ-EXTRA SEKTIONER — pixel-match Götadental (Varför / CTA / Relaterade) === */
 #jq-blog-extra { display: block; font-family: var(--jqb-sans); margin-top: clamp(48px, 8vw, 96px); }
 #jq-blog-extra .jq-sec { padding: clamp(56px, 9vw, 110px) 0; }
@@ -701,10 +741,24 @@ html body #jq-archive {
         injectArchive();
       }
 
-      // ── /post-specifika injects (back-link, faktagranskad) ──
+      // ── /post-specifika injects (back-link, faktagranskad, mid-CTA, keyword-links) ──
       if (isPost) {
         injectBackLink();
         injectFaktagranskad();
+        // Mid-artikel CTA + keyword-links kräver att Wix Blog har renderat content.
+        // Kör med fördröjning + retry tills content finns.
+        var postRetry = 0;
+        var postRetryTimer = setInterval(function () {
+          postRetry++;
+          var contentEl = document.querySelector("[data-hook='post-content']") ||
+                          document.querySelector(".post-page-content");
+          if (contentEl && contentEl.querySelectorAll("h2").length > 0) {
+            clearInterval(postRetryTimer);
+            try { injectMidArticleCta(); } catch(e) {}
+            try { injectKeywordLinks(); } catch(e) {}
+          }
+          if (postRetry >= 15) clearInterval(postRetryTimer);
+        }, 600);
       }
 
       // Chapter rail — bara på post-page
@@ -838,6 +892,86 @@ html body #jq-archive {
           if (shell) shell.remove();
         });
       } catch (e) { console.error("[JQ.blog] fetchRelatedPosts:", e); }
+    }
+
+    // === MID-ARTIKEL CTA (injectas efter 2:a H2) ======================== //
+    function injectMidArticleCta() {
+      if (document.querySelector(".jq-mid-cta")) return;
+      var contentRoot = document.querySelector("[data-hook='post-content']") ||
+                        document.querySelector(".post-page-content") ||
+                        document.querySelector("article") || document.body;
+      var h2s = Array.from(contentRoot.querySelectorAll("h2"));
+      if (h2s.length < 2) return;
+      // Sätt CTA efter 2:a H2 (index 1), eller sista om färre
+      var anchor = h2s[Math.min(1, h2s.length - 1)];
+      var insertAfter = anchor;
+      var sib = anchor.nextElementSibling;
+      if (sib && !["H1","H2","H3"].includes(sib.tagName)) insertAfter = sib;
+      var cta = document.createElement("div");
+      cta.className = "jq-mid-cta";
+      cta.innerHTML =
+        '<span class="jq-mid-cta-eyebrow">Nästa steg</span>'
+        + '<p class="jq-mid-cta-t">Frågor om <em>din</em> situation?</p>'
+        + '<div class="jq-mid-cta-btns">'
+        + '<a class="jq-mid-cta-btn jq-mid-cta-btn--primary" href="/boka">Boka kostnadsfri konsultation</a>'
+        + '<a class="jq-mid-cta-btn jq-mid-cta-btn--secondary" href="tel:+46317135784">031‑713 57 84</a>'
+        + '</div>';
+      try { insertAfter.parentNode.insertBefore(cta, insertAfter.nextSibling); }
+      catch(e) { console.error("[JQ.blog] injectMidArticleCta:", e); }
+    }
+
+    // === KEYWORD AUTO-LINK (första förekomst per behandling) ============ //
+    function injectKeywordLinks() {
+      var contentRoot = document.querySelector("[data-hook='post-content']") ||
+                        document.querySelector(".post-page-content") ||
+                        document.querySelector("article");
+      if (!contentRoot) return;
+      var treatments = [
+        { re: /\b(botox)\b/i, url: "/botox" },
+        { re: /\b(fillers?)\b/i, url: "/fillers" },
+        { re: /\b(tr[åa]dlyft(?:et)?)\b/i, url: "/tradlyft" },
+        { re: /\b(kemisk peeling)\b/i, url: "/behandling/kemisk-peeling" },
+        { re: /\b(profhilo)\b/i, url: "/behandling/profhilo" },
+        { re: /\b(sunekos)\b/i, url: "/behandling/sunekos" },
+        { re: /\b(microneedling)\b/i, url: "/behandlingar/hudkvalitet" }
+      ];
+      var linked = {};
+      treatments.forEach(function(t) { linked[t.url] = false; });
+      // Samla textnoder i innehållet, hoppa över rubriker och redan-länkade
+      var walker = document.createTreeWalker(contentRoot, NodeFilter.SHOW_TEXT, {
+        acceptNode: function(node) {
+          var p = node.parentElement;
+          if (!p) return NodeFilter.FILTER_REJECT;
+          var tag = p.tagName.toUpperCase();
+          if (["H1","H2","H3","H4","H5","H6","A","SCRIPT","STYLE"].includes(tag)) return NodeFilter.FILTER_REJECT;
+          return NodeFilter.FILTER_ACCEPT;
+        }
+      });
+      var nodes = [];
+      var n;
+      while ((n = walker.nextNode())) nodes.push(n);
+      treatments.forEach(function(t) {
+        if (linked[t.url]) return;
+        for (var i = 0; i < nodes.length; i++) {
+          var text = nodes[i].nodeValue || "";
+          var m = t.re.exec(text);
+          if (!m) continue;
+          var before = text.slice(0, m.index);
+          var word = m[0];
+          var after = text.slice(m.index + word.length);
+          var a = document.createElement("a");
+          a.href = t.url;
+          a.className = "jq-kw-link";
+          a.textContent = word;
+          var frag = document.createDocumentFragment();
+          if (before) frag.appendChild(document.createTextNode(before));
+          frag.appendChild(a);
+          if (after) frag.appendChild(document.createTextNode(after));
+          nodes[i].parentNode.replaceChild(frag, nodes[i]);
+          linked[t.url] = true;
+          break;
+        }
+      });
     }
 
     // === /BLOG ARCHIVE — bygg Götadental-style hero/filter/featured/lista === //
