@@ -787,14 +787,26 @@ html body #jq-archive {
 
     function fetchRelatedPosts() {
       try {
-        fetch("/_api/blog-frontend-adapter-public/v2/post-feed-page?includeContent=false&lang=sv&page=1&pageSize=6", {
-          headers: { Accept: "application/json" },
-          credentials: "same-origin"
-        }).then(function (r) { return r.ok ? r.json() : null; }).then(function (data) {
+        fetch("/blog-feed.xml", { credentials: "same-origin" })
+        .then(function (r) { return r.ok ? r.text() : null; })
+        .then(function (xml) {
           const shell = document.getElementById("jq-blog-related-shell");
-          if (!shell) return;
-          var raw = (data && data.postFeedPage && data.postFeedPage.posts && data.postFeedPage.posts.posts) || [];
-          const posts = raw;
+          if (!shell || !xml) return;
+          var doc = new DOMParser().parseFromString(xml, "text/xml");
+          var items = Array.from(doc.querySelectorAll("item"));
+          var seen = new Set();
+          var posts = [];
+          items.forEach(function (item) {
+            var title = (item.querySelector("title") || {}).textContent || "";
+            var key = title.trim().toLowerCase();
+            if (seen.has(key)) return;
+            seen.add(key);
+            var link = (item.querySelector("link") || {}).textContent || "";
+            var slug = link.replace(/^.*\/post\//, "").replace(/\?.*$/, "");
+            var enc = item.querySelector("enclosure");
+            var img = enc ? (enc.getAttribute("url") || "") : "";
+            posts.push({ title: title, slug: slug, media: img ? { embedMedia: { thumbnail: { url: img } } } : null });
+          });
           const currentSlug = (window.location.pathname.split("/").pop() || "").toLowerCase();
           const filtered = posts.filter(function (p) {
             return (p.slug || "").toLowerCase() !== currentSlug;
@@ -1057,37 +1069,44 @@ html body #jq-archive {
         + '<p class="jq-blog-hero-lede">Laddar artiklar…</p>'
         + '</div></section>';
 
-      // Fetch posts via Wix Blog public adapter. Kräver browser-session (same-origin).
-      const apiUrl = "/_api/blog-frontend-adapter-public/v2/post-feed-page?includeContent=false&lang=sv&page=1&pageSize=50";
-      console.log("[JQ.blog] fetching:", apiUrl);
+      // Fetch posts via Wix RSS feed — publik, ingen auth behövs.
+      console.log("[JQ.blog] fetching RSS /blog-feed.xml");
       try {
-        fetch(apiUrl, {
-          headers: { Accept: "application/json" },
-          credentials: "same-origin"
-        }).then(function (r) {
-          console.log("[JQ.blog] fetch status:", r.status);
-          if (!r.ok) throw new Error("HTTP " + r.status);
-          return r.json();
-        }).then(function (data) {
-          var posts = [];
-          if (data && data.postFeedPage && data.postFeedPage.posts && data.postFeedPage.posts.posts) {
-            posts = data.postFeedPage.posts.posts;
-          } else if (data && data.posts && Array.isArray(data.posts)) {
-            posts = data.posts;
-          }
-          console.log("[JQ.blog] fetched", posts.length, "posts");
-          // Sortera nyast → äldst (säker fallback)
-          posts.sort(function (a, b) {
-            const da = new Date(a.firstPublishedDate || a.lastPublishedDate || 0).getTime();
-            const db = new Date(b.firstPublishedDate || b.lastPublishedDate || 0).getTime();
-            return db - da;
+        fetch("/blog-feed.xml", { credentials: "same-origin" })
+          .then(function (r) {
+            if (!r.ok) throw new Error("RSS HTTP " + r.status);
+            return r.text();
+          })
+          .then(function (xml) {
+            var parser = new DOMParser();
+            var doc = parser.parseFromString(xml, "text/xml");
+            var items = Array.from(doc.querySelectorAll("item"));
+            var seen = new Set();
+            var posts = [];
+            items.forEach(function (item) {
+              var title = (item.querySelector("title") || {}).textContent || "";
+              var titleKey = title.trim().toLowerCase();
+              if (seen.has(titleKey)) return; // dedup
+              seen.add(titleKey);
+              var link = (item.querySelector("link") || {}).textContent || "";
+              var slug = link.replace(/^.*\/post\//, "").replace(/\?.*$/, "");
+              var desc = (item.querySelector("description") || {}).textContent || "";
+              var pubDate = (item.querySelector("pubDate") || {}).textContent || "";
+              var enc = item.querySelector("enclosure");
+              var img = enc ? (enc.getAttribute("url") || "") : "";
+              posts.push({
+                title: title, slug: slug, excerpt: desc,
+                firstPublishedDate: pubDate ? new Date(pubDate).toISOString() : "",
+                media: img ? { embedMedia: { thumbnail: { url: img } } } : null
+              });
+            });
+            console.log("[JQ.blog] RSS: ", posts.length, "posts");
+            renderArchive(posts);
+          })
+          .catch(function (err) {
+            console.error("[JQ.blog] RSS failed:", err);
+            renderArchive([]);
           });
-          renderArchive(posts);
-        }).catch(function (err) {
-          console.error("[JQ.blog] fetch failed:", err);
-          // API-fail — visa bara hero så sidan inte är tom
-          renderArchive([]);
-        });
       } catch (e) {
         console.error("[JQ.blog] injectArchive try/catch:", e);
         renderArchive([]);
