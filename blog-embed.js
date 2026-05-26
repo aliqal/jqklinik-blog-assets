@@ -987,9 +987,30 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
   }
   /* Mobile title size — inte gigantisk-stor */
   html body [data-hook="post-title"] {
-    font-size: clamp(1.9rem, 7vw, 2.4rem) !important;
-    line-height: 1.1 !important;
-    letter-spacing: -.02em !important;
+    font-size: clamp(1.7rem, 6.4vw, 2.1rem) !important;
+    line-height: 1.12 !important;
+    letter-spacing: -.022em !important;
+  }
+  /* Mobile meta — säkerställ läsbarhet, ingen avklippning */
+  html body [data-hook="post-page-root"] ul,
+  html body [data-hook="post-page-root"] ul:has([data-hook="time-ago"]) {
+    flex-wrap: wrap !important;
+    overflow: visible !important;
+  }
+  html body [data-hook="time-ago"],
+  html body [data-hook="time-to-read"] {
+    white-space: nowrap !important;
+    text-overflow: clip !important;
+    overflow: visible !important;
+  }
+  /* Komprimera vertikal-spacing mellan header → title */
+  html body [data-hook="post-page-root"] header {
+    padding-top: 24px !important;
+    padding-bottom: 12px !important;
+  }
+  html body [data-hook="post-title"] {
+    margin-top: 12px !important;
+    margin-bottom: 16px !important;
   }
   html body [data-hook="post-content"] p,
   html body .post-page-content p {
@@ -1056,6 +1077,41 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
           for (var i = 0; i < el.children.length; i++) walk(el.children[i]);
         }
         walk(root);
+      }
+
+      // Stäng av jq-header welcome-popup ("VISA RUNDTUR") på blog/post-sidor.
+      // Popup ligger i <jq-header>'s shadow DOM, så extern CSS når inte den.
+      function hideWelcomePopup() {
+        var header = document.querySelector('jq-header');
+        if (!header || !header.shadowRoot) return;
+        var candidates = header.shadowRoot.querySelectorAll('*');
+        for (var i = 0; i < candidates.length; i++) {
+          var el = candidates[i];
+          var txt = (el.textContent || '').trim();
+          if (txt && txt.length < 100 && /VISA RUNDTUR|nyrenoverad/i.test(txt)) {
+            // Hitta closest popup-container och dölj
+            var container = el;
+            for (var k = 0; k < 5 && container; k++) {
+              if (container.tagName === 'JQ-HEADER') break;
+              container = container.parentElement;
+            }
+            // Hitta lämplig container (innan jq-header själv)
+            var hide = el;
+            while (hide && hide.parentElement && hide.parentElement.tagName !== 'JQ-HEADER') {
+              hide = hide.parentElement;
+            }
+            if (hide && hide.parentElement) {
+              hide.style.setProperty('display', 'none', 'important');
+            }
+            break;
+          }
+        }
+      }
+      if (isPost || isBlog) {
+        hideWelcomePopup();
+        setTimeout(hideWelcomePopup, 800);
+        setTimeout(hideWelcomePopup, 2000);
+        setTimeout(hideWelcomePopup, 4000);
       }
       if (isPost || isBlog) {
         forceFullWidth();
