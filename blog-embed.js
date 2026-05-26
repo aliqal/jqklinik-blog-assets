@@ -1003,10 +1003,15 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
     overflow: visible !important;
   }
   html body [data-hook="time-ago"],
-  html body [data-hook="time-to-read"] {
+  html body [data-hook="time-to-read"],
+  html body [data-hook="post-page-root"] li,
+  html body [data-hook="post-page-root"] li > * {
     white-space: nowrap !important;
     text-overflow: clip !important;
     overflow: visible !important;
+    width: auto !important;
+    max-width: none !important;
+    min-width: 0 !important;
   }
   /* Komprimera vertikal-spacing mellan header → title */
   html body [data-hook="post-page-root"] header {
@@ -1068,9 +1073,11 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
         if (window.innerWidth >= 720) return;
         var root = document.querySelector('[data-hook="post-page-root"]');
         if (!root) return;
+        // Inline-elements som ska behålla inline-bredd (inte 100%)
+        var INLINE_TAGS = { LI: 1, SPAN: 1, A: 1, I: 1, B: 1, EM: 1, STRONG: 1, BUTTON: 1, SVG: 1, PATH: 1, IMG: 1, BR: 1 };
         function walk(el) {
           if (!el || el.nodeType !== 1) return;
-          if (el.tagName === 'IFRAME') return;
+          if (el.tagName === 'IFRAME' || INLINE_TAGS[el.tagName]) return;
           // Skippa våra egna inline-flex containers — annars breakas back-link / chips
           if (el.className && typeof el.className === 'string') {
             if (el.className.indexOf('jq-blog-') === 0 || el.className.indexOf(' jq-blog-') !== -1) return;
