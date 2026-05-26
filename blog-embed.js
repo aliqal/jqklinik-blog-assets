@@ -723,7 +723,7 @@ html body [data-hook="post-page-root"] {
 html body [data-hook="post-content"],
 html body .post-page-content,
 html body article[class*="post-content"] {
-  max-width: 720px !important;
+  max-width: 860px !important;
   width: 100% !important;
   margin: 0 auto !important;
   padding: 0 24px !important;
@@ -756,7 +756,7 @@ html body .post-page-content h3 {
 html body [data-hook="post-title"],
 html body [data-hook="post-description"],
 html body [data-hook="post-page-root"] ul:has([data-hook="time-ago"]) {
-  max-width: 720px !important;
+  max-width: 860px !important;
   margin-left: auto !important;
   margin-right: auto !important;
   padding-left: 24px !important;
@@ -922,11 +922,14 @@ html body [data-hook="post-content"] .jq-inline-cta a {
       const liNodes = rail.querySelectorAll("li");
       h2s.forEach((h, i) => items.push({ h, li: liNodes[i] }));
 
+      // getBoundingClientRect ger document-relativ position oavsett positioned
+      // ancestors (offsetTop fastnade på sista item när Wix wraps content i
+      // position:relative-containers).
       function highlight() {
-        const y = window.scrollY + 140;
         let active = null;
         items.forEach((it) => {
-          if (it.h.offsetTop <= y) active = it;
+          const top = it.h.getBoundingClientRect().top;
+          if (top <= 140) active = it;
         });
         items.forEach((it) => it.li.classList.toggle("is-active", it === active));
       }
