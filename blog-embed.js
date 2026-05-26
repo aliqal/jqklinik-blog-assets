@@ -7,6 +7,19 @@
     if (!isBlog && !isPost) return;
     if (document.getElementById("jq-blog-style")) return;
 
+    // Override Wix:s hardkodade `width=320` viewport på mobil — annars
+    // renderas /blog och /post/* som om viewport vore 320px breda,
+    // oavsett device, vilket gör text gigantisk och layout broken.
+    try {
+      var vps = document.querySelectorAll('meta[name="viewport"]');
+      vps.forEach(function (v) { v.parentNode && v.parentNode.removeChild(v); });
+      var nv = document.createElement('meta');
+      nv.name = 'viewport';
+      nv.content = 'width=device-width, initial-scale=1, viewport-fit=cover';
+      nv.setAttribute('data-jq-vp', '1');
+      document.head.appendChild(nv);
+    } catch (e) {}
+
     // Spectral + Inter fonts via Google Fonts (preload + display:swap)
     const fontLink = document.createElement("link");
     fontLink.rel = "stylesheet";
@@ -828,6 +841,54 @@ html body [data-hook="post-content"] .jq-inline-cta a {
   text-underline-offset: 4px !important;
   border-bottom: none !important;
   font-weight: 500 !important;
+}
+
+/* === MOBILE — reducera padding + säkerställ läsbar typografi ======== */
+@media (max-width: 720px) {
+  html body [data-hook="post-content"],
+  html body .post-page-content,
+  html body article[class*="post-content"],
+  html body [data-hook="post-title"],
+  html body [data-hook="post-description"],
+  html body [data-hook="post-page-root"] ul:has([data-hook="time-ago"]) {
+    padding-left: 18px !important;
+    padding-right: 18px !important;
+  }
+  html body [data-hook="post-content"] p,
+  html body .post-page-content p {
+    font-size: 1.05rem !important;
+    line-height: 1.65 !important;
+  }
+  html body [data-hook="post-content"] h2 {
+    font-size: 1.5rem !important;
+    margin-top: 36px !important;
+  }
+  html body [data-hook="post-content"] h3 {
+    font-size: 1.2rem !important;
+    margin-top: 28px !important;
+  }
+  html body [data-hook="post-hero-image"] {
+    padding: 0 !important;
+    margin: 16px 0 28px !important;
+    border-radius: 0 !important;
+  }
+  html body [data-hook="post-hero-image"] img {
+    border-radius: 0 !important;
+  }
+  html body [data-hook="post-content"] blockquote {
+    padding: 18px 16px !important;
+    margin: 24px -2px !important;
+    font-size: 1rem !important;
+  }
+  html body [data-hook="post-content"] ul,
+  html body [data-hook="post-content"] ol {
+    padding-left: 22px !important;
+  }
+  html body [data-hook="post-content"] [data-jq-cta],
+  html body [data-hook="post-content"] .jq-inline-cta {
+    margin: 28px -4px !important;
+    padding: 22px 18px !important;
+  }
 }
 ` : ""}
 
