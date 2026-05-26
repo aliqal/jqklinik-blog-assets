@@ -133,8 +133,8 @@ html body #jq-pop-backdrop {
 /* === CHAPTER RAIL (desktop only, sticky vänster) ==================== */
 #jq-blog-rail {
   position: fixed;
-  top: 110px; left: max(24px, calc((100vw - 1100px) / 2 - 240px));
-  width: 220px; max-height: calc(100vh - 140px);
+  top: 110px; left: max(24px, calc((100vw - 1200px) / 2 - 280px));
+  width: 260px; max-height: calc(100vh - 140px);
   overflow-y: auto; z-index: 50;
   font-family: var(--jqb-sans);
   pointer-events: auto;
@@ -767,7 +767,7 @@ html body [data-hook="post-page-root"] {
 html body [data-hook="post-content"],
 html body .post-page-content,
 html body article[class*="post-content"] {
-  max-width: 760px !important;
+  max-width: 920px !important;
   width: 100% !important;
   margin: 0 auto !important;
   padding: clamp(48px, 7vw, 96px) 5vw !important;
@@ -801,16 +801,16 @@ html body .post-page-content h3 {
 html body [data-hook="post-title"],
 html body [data-hook="post-description"],
 html body [data-hook="post-page-root"] ul:has([data-hook="time-ago"]) {
-  max-width: 760px !important;
+  max-width: 920px !important;
   margin-left: auto !important;
   margin-right: auto !important;
   padding-left: 24px !important;
   padding-right: 24px !important;
   text-align: left !important;
 }
-/* Hero image — Götadental: 16/9 aspect inom content-bredd */
+/* Hero image — 16/9 aspect inom content-bredd (920px) */
 html body [data-hook="post-hero-image"] {
-  max-width: 760px !important;
+  max-width: 920px !important;
   margin: clamp(20px, 3vw, 36px) auto clamp(32px, 5vw, 56px) !important;
   padding: 0 5vw !important;
 }
@@ -990,11 +990,36 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
     padding-left: 5vw !important;
     padding-right: 5vw !important;
   }
-  /* Mobile title size — inte gigantisk-stor */
+  /* Mobile title — komprimerad (var 5-6 rader, nu 3-4) */
   html body [data-hook="post-title"] {
-    font-size: clamp(1.7rem, 6.4vw, 2.1rem) !important;
-    line-height: 1.12 !important;
+    font-size: clamp(1.45rem, 5.6vw, 1.85rem) !important;
+    line-height: 1.14 !important;
     letter-spacing: -.022em !important;
+    margin-top: 0 !important;
+    margin-bottom: 12px !important;
+  }
+  /* Mobile: komprimera top-whitespace dramatiskt */
+  html body [data-hook="post-page-root"] header {
+    padding-top: 16px !important;
+    padding-bottom: 8px !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+  }
+  html body [data-hook="post-page-root"] ul:has([data-hook="time-ago"]) {
+    margin-top: 8px !important;
+    margin-bottom: 12px !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+  }
+  html body [data-hook="post-hero-image"] {
+    margin-top: 8px !important;
+    margin-bottom: 16px !important;
+    padding: 0 !important;
+  }
+  /* Mobile content padding ner */
+  html body [data-hook="post-content"] {
+    padding-top: 16px !important;
+    padding-bottom: 32px !important;
   }
   /* Mobile meta — säkerställ läsbarhet, ingen avklippning */
   html body [data-hook="post-page-root"] ul,
