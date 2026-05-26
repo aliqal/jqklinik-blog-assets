@@ -1065,8 +1065,14 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
         if (!root) return;
         function walk(el) {
           if (!el || el.nodeType !== 1) return;
-          // Skippa Wix popup / overlay / iframe — vi vill inte forcera dem
-          if (el.tagName === 'IFRAME' || el.classList.contains('jq-startsida-popup')) return;
+          if (el.tagName === 'IFRAME') return;
+          // Skippa våra egna inline-flex containers — annars breakas back-link / chips
+          if (el.className && typeof el.className === 'string') {
+            if (el.className.indexOf('jq-blog-') === 0 || el.className.indexOf(' jq-blog-') !== -1) return;
+            if (el.classList.contains('jq-startsida-popup')) return;
+          }
+          var disp = el.style.display || '';
+          if (disp.indexOf('inline-flex') !== -1 || disp.indexOf('inline-block') !== -1) return;
           el.style.setProperty('width', '100%', 'important');
           el.style.setProperty('max-width', '100%', 'important');
           el.style.setProperty('min-width', '0', 'important');
@@ -1082,30 +1088,46 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
       // Stäng av jq-header welcome-popup ("VISA RUNDTUR") på blog/post-sidor.
       // Popup ligger i <jq-header>'s shadow DOM, så extern CSS når inte den.
       function hideWelcomePopup() {
-        var header = document.querySelector('jq-header');
-        if (!header || !header.shadowRoot) return;
-        var candidates = header.shadowRoot.querySelectorAll('*');
-        for (var i = 0; i < candidates.length; i++) {
-          var el = candidates[i];
-          var txt = (el.textContent || '').trim();
-          if (txt && txt.length < 100 && /VISA RUNDTUR|nyrenoverad/i.test(txt)) {
-            // Hitta closest popup-container och dölj
-            var container = el;
-            for (var k = 0; k < 5 && container; k++) {
-              if (container.tagName === 'JQ-HEADER') break;
-              container = container.parentElement;
+        // 1) Light DOM — om popup råkar vara på top-level
+        document.querySelectorAll('[class*="welcome"], [class*="rundtur"], [class*="banner-popup"], [data-jq-welcome]').forEach(function(p){
+          p.style.setProperty('display', 'none', 'important');
+        });
+        // 2) Shadow DOM inom jq-header
+        var hosts = document.querySelectorAll('jq-header, jq-footer, jq-startsida');
+        hosts.forEach(function(host){
+          if (!host.shadowRoot) return;
+          // Direct selectors
+          host.shadowRoot.querySelectorAll('[class*="welcome"], [class*="rundtur"], [class*="banner-popup"], [data-jq-welcome]').forEach(function(p){
+            p.style.setProperty('display', 'none', 'important');
+          });
+          // By text — hitta nearest positioned ancestor och dölj
+          var all = host.shadowRoot.querySelectorAll('div, section, aside, span');
+          for (var i = 0; i < all.length; i++) {
+            var el = all[i];
+            var txt = (el.textContent || '').trim();
+            if (txt && txt.length < 80 && (txt.indexOf('VISA RUNDTUR') !== -1 || txt.indexOf('nyrenoverad') !== -1)) {
+              var w = el;
+              for (var k = 0; k < 8 && w; k++) {
+                try {
+                  var cs = host.shadowRoot.ownerDocument.defaultView.getComputedStyle(w);
+                  if (cs && (cs.position === 'fixed' || cs.position === 'absolute')) {
+                    w.style.setProperty('display', 'none', 'important');
+                    break;
+                  }
+                } catch (e) {}
+                w = w.parentElement || w.parentNode;
+                if (!w || w.nodeType !== 1) break;
+              }
+              // Fallback: ta bort element direkt
+              try { el.style.setProperty('display', 'none', 'important'); } catch (e) {}
+              try {
+                var p = el.parentElement;
+                if (p && p.tagName !== 'BODY') p.style.setProperty('display', 'none', 'important');
+              } catch (e) {}
+              break;
             }
-            // Hitta lämplig container (innan jq-header själv)
-            var hide = el;
-            while (hide && hide.parentElement && hide.parentElement.tagName !== 'JQ-HEADER') {
-              hide = hide.parentElement;
-            }
-            if (hide && hide.parentElement) {
-              hide.style.setProperty('display', 'none', 'important');
-            }
-            break;
           }
-        }
+        });
       }
       if (isPost || isBlog) {
         hideWelcomePopup();
