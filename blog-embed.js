@@ -103,11 +103,16 @@ html body [class*="blog-button-background"] {
   visibility: hidden !important;
   height: 0 !important;
 }
-/* jq-welcome-popup ska INTE visa på /post — täcker hero. */
+/* jq-welcome-popup + Tour-widget ska INTE visa på /post + /blog */
 html body jq-welcome-popup,
 html body [class*="welcome-popup"],
-html body .jq-welcome-popup {
+html body .jq-welcome-popup,
+html body #jq-tb,
+html body #jq-tg,
+html body #jq-tt,
+html body #jq-pop-backdrop {
   display: none !important;
+  visibility: hidden !important;
 }
 ` : ""}
 
@@ -1083,6 +1088,27 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
           for (var i = 0; i < el.children.length; i++) walk(el.children[i]);
         }
         walk(root);
+      }
+
+      // Tour-widget (#jq-tb "Hemsidan är nyrenoverad → VISA RUNDTUR") visas
+      // på alla sidor via Custom Embed. Stäng av på blog/post permanent via
+      // localStorage flag + DOM remove.
+      if (isPost || isBlog) {
+        try {
+          localStorage.setItem('jq-tour-v4-2026', 'dismissed');
+          sessionStorage.setItem('jq-tour-v4-2026', 'dismissed');
+        } catch (e) {}
+        function removeTour() {
+          ['jq-tb', 'jq-tg', 'jq-tt'].forEach(function (id) {
+            var el = document.getElementById(id);
+            if (el) { try { el.remove(); } catch (_) { el.style.display = 'none'; } }
+          });
+        }
+        removeTour();
+        setTimeout(removeTour, 500);
+        setTimeout(removeTour, 1500);
+        setTimeout(removeTour, 4000);
+        setTimeout(removeTour, 6000);
       }
 
       // Stäng av jq-header welcome-popup ("VISA RUNDTUR") på blog/post-sidor.
