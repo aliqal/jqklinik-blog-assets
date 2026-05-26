@@ -964,6 +964,40 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
 
 /* === MOBILE — Wix tvingar 320px viewport på blog. Force full-width === */
 @media (max-width: 720px) {
+  /* HTML/body till hela viewport */
+  html, body, html body {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    min-width: 0 !important;
+    overflow-x: hidden !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+  /* Wix top-level containers (SITE_ROOT, SITE_CONTAINER, masterPage, ...)
+     — alla har hardkodad 320px på mobile. Force till 100vw. */
+  html body #SITE_ROOT,
+  html body #SITE_CONTAINER,
+  html body #site-root,
+  html body #masterPage,
+  html body #PAGES_CONTAINER,
+  html body #SITE_PAGES,
+  html body #SITE_HEADER,
+  html body #SITE_FOOTER,
+  html body #BACKGROUND_GROUP,
+  html body [id^="SITE_PAGES"],
+  html body [id^="PAGES_CONTAINER"],
+  html body [data-mesh-id*="centeredContent"],
+  html body [data-mesh-id*="PAGES_CONTAINER"],
+  html body [data-mesh-id*="SITE_PAGES"] {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    min-width: 0 !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    box-sizing: border-box !important;
+  }
   html body [data-hook="post-page-root"],
   html body [data-hook="post-page"],
   html body [data-hook="post-page-root"] [data-hook="bgLayers"] {
@@ -1111,14 +1145,32 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
       // (highest specificity). Re-kör periodiskt om Wix re-renderar.
       function forceFullWidth() {
         if (window.innerWidth >= 720) return;
-        var root = document.querySelector('[data-hook="post-page-root"]');
-        if (!root) return;
-        // Inline-elements som ska behålla inline-bredd (inte 100%)
         var INLINE_TAGS = { LI: 1, SPAN: 1, A: 1, I: 1, B: 1, EM: 1, STRONG: 1, BUTTON: 1, SVG: 1, PATH: 1, IMG: 1, BR: 1 };
+        // 1. Force html/body till viewport-width
+        [document.documentElement, document.body].forEach(function (el) {
+          if (!el) return;
+          el.style.setProperty('width', '100vw', 'important');
+          el.style.setProperty('max-width', '100vw', 'important');
+          el.style.setProperty('overflow-x', 'hidden', 'important');
+          el.style.setProperty('margin-left', '0', 'important');
+          el.style.setProperty('margin-right', '0', 'important');
+        });
+        // 2. Wix top-level kontainrar — hardkodade 320px width-killers
+        var topLevel = document.querySelectorAll(
+          '#SITE_ROOT, #SITE_CONTAINER, #site-root, #masterPage, #PAGES_CONTAINER, #SITE_PAGES, #BACKGROUND_GROUP, #SITE_FOOTER, [id^="PAGES_CONTAINER"], [data-mesh-id*="centeredContent"], [data-mesh-id*="PAGES_CONTAINER"]'
+        );
+        topLevel.forEach(function (el) {
+          el.style.setProperty('width', '100vw', 'important');
+          el.style.setProperty('max-width', '100vw', 'important');
+          el.style.setProperty('min-width', '0', 'important');
+          el.style.setProperty('margin-left', '0', 'important');
+          el.style.setProperty('margin-right', '0', 'important');
+          el.style.setProperty('left', '0', 'important');
+          el.style.setProperty('right', '0', 'important');
+        });
         function walk(el) {
           if (!el || el.nodeType !== 1) return;
           if (el.tagName === 'IFRAME' || INLINE_TAGS[el.tagName]) return;
-          // Skippa våra egna inline-flex containers — annars breakas back-link / chips
           if (el.className && typeof el.className === 'string') {
             if (el.className.indexOf('jq-blog-') === 0 || el.className.indexOf(' jq-blog-') !== -1) return;
             if (el.classList.contains('jq-startsida-popup')) return;
@@ -1128,13 +1180,19 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
           el.style.setProperty('width', '100%', 'important');
           el.style.setProperty('max-width', '100%', 'important');
           el.style.setProperty('min-width', '0', 'important');
+          el.style.setProperty('margin-left', '0', 'important');
+          el.style.setProperty('margin-right', '0', 'important');
+          el.style.setProperty('left', '0', 'important');
           if (el.tagName === 'HEADER') {
             el.style.setProperty('padding-left', '5vw', 'important');
             el.style.setProperty('padding-right', '5vw', 'important');
           }
           for (var i = 0; i < el.children.length; i++) walk(el.children[i]);
         }
-        walk(root);
+        // 3. Walk from body recursively (broadest coverage)
+        if (document.body) {
+          for (var j = 0; j < document.body.children.length; j++) walk(document.body.children[j]);
+        }
       }
 
       // Tour-widget (#jq-tb "Hemsidan är nyrenoverad → VISA RUNDTUR") visas
