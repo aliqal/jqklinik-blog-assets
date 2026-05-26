@@ -1004,14 +1004,29 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
   }
   html body [data-hook="time-ago"],
   html body [data-hook="time-to-read"],
-  html body [data-hook="post-page-root"] li,
-  html body [data-hook="post-page-root"] li > * {
+  html body [data-hook="post-page-root"] ul:has([data-hook="time-ago"]) li,
+  html body [data-hook="post-page-root"] ul:has([data-hook="time-ago"]) li > * {
     white-space: nowrap !important;
     text-overflow: clip !important;
     overflow: visible !important;
     width: auto !important;
     max-width: none !important;
     min-width: 0 !important;
+  }
+  /* Content bullets MÅSTE wrappa, INTE nowrap. Plus mindre padding-left. */
+  html body [data-hook="post-content"] ul,
+  html body [data-hook="post-content"] ol {
+    padding-left: 22px !important;
+  }
+  html body [data-hook="post-content"] ul li,
+  html body [data-hook="post-content"] ol li,
+  html body [data-hook="post-content"] li p {
+    white-space: normal !important;
+    overflow: visible !important;
+    width: auto !important;
+    max-width: 100% !important;
+    word-wrap: break-word !important;
+    overflow-wrap: break-word !important;
   }
   /* Komprimera vertikal-spacing mellan header → title */
   html body [data-hook="post-page-root"] header {
