@@ -1017,6 +1017,44 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
 
     // === Scroll progress + chapter rail JS ========================== //
     function init() {
+      // Mobile: Wix sätter `width: 320px` inline på sina container-divs
+      // som CSS !important INTE alltid kan övertrumfra. Force-width allt
+      // under [data-hook="post-page-root"] till 100% via JS-inline styles
+      // (highest specificity). Re-kör periodiskt om Wix re-renderar.
+      function forceFullWidth() {
+        if (window.innerWidth >= 720) return;
+        var root = document.querySelector('[data-hook="post-page-root"]');
+        if (!root) return;
+        function walk(el) {
+          if (!el || el.nodeType !== 1) return;
+          // Skippa Wix popup / overlay / iframe — vi vill inte forcera dem
+          if (el.tagName === 'IFRAME' || el.classList.contains('jq-startsida-popup')) return;
+          el.style.setProperty('width', '100%', 'important');
+          el.style.setProperty('max-width', '100%', 'important');
+          el.style.setProperty('min-width', '0', 'important');
+          if (el.tagName === 'HEADER') {
+            el.style.setProperty('padding-left', '5vw', 'important');
+            el.style.setProperty('padding-right', '5vw', 'important');
+          }
+          for (var i = 0; i < el.children.length; i++) walk(el.children[i]);
+        }
+        walk(root);
+      }
+      if (isPost || isBlog) {
+        forceFullWidth();
+        setTimeout(forceFullWidth, 1000);
+        setTimeout(forceFullWidth, 2500);
+        setTimeout(forceFullWidth, 5000);
+        // Observer för dynamiskt tillagt content
+        try {
+          var mo = new MutationObserver(function () {
+            if (window.innerWidth < 720) forceFullWidth();
+          });
+          mo.observe(document.body, { childList: true, subtree: true });
+          setTimeout(function () { mo.disconnect(); }, 12000);
+        } catch (e) {}
+      }
+
       // Progress bar
       let bar = document.getElementById("jq-blog-progress");
       if (!bar) {
