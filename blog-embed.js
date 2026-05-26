@@ -92,6 +92,23 @@ ${isPost ? `
 }
 /* "..." mer-knapp wrapper kan ha sin egen container — fånga upp */
 [id^="more-button-"] { display: none !important; }
+
+/* Wix Mobile Blog Navigation — "Inlägg" + "All Posts"-dropdown ovanför post.
+   Wix injicerar dessa bara på mobile. blog-header/blog-button är stabila globala klasser. */
+html body .blog-header-background-color,
+html body .blog-button-background-color,
+html body [class*="blog-header-background"],
+html body [class*="blog-button-background"] {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+}
+/* jq-welcome-popup ska INTE visa på /post — täcker hero. */
+html body jq-welcome-popup,
+html body [class*="welcome-popup"],
+html body .jq-welcome-popup {
+  display: none !important;
+}
 ` : ""}
 
 /* === SCROLL-PROGRESS-BAR ============================================ */
