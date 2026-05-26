@@ -29,18 +29,22 @@
     const css = document.createElement("style");
     css.id = "jq-blog-style";
     css.textContent = `
-/* === JQ BLOG — Götadental-inspirerad editorial-stil ============= */
+/* === JQ BLOG — PIXEL-MATCH Götadental (exakta tokens från jq-r1.css) ===
+   Source-of-truth: gotadental.se/wp-content/themes/gota-dental/assets/css/jq-r1.css */
 :root {
   --jqb-serif: "Spectral", Georgia, serif;
   --jqb-sans: "Inter", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  --jqb-ink: #1a1815;
-  --jqb-ink-2: #2a2622;
-  --jqb-stone: #6b6358;
-  --jqb-cream: #f4f1ea;
-  --jqb-sand: #ebe6dc;
-  --jqb-line: #d9d2c4;
-  --jqb-accent: #1e6db8;
-  --jqb-ease: cubic-bezier(.2, .9, .2, 1);
+  --jqb-bg:    #F0ECE2;  /* page bg — light beige */
+  --jqb-bg-lt: #F6F3EC;  /* lighter bg */
+  --jqb-lav:   #E2E6F0;  /* lavender */
+  --jqb-ink:   #15171B;  /* coal — primary text */
+  --jqb-deep:  #100F0D;  /* darker coal */
+  --jqb-cream: #F4F1EA;  /* cream — alt bg */
+  --jqb-line:  #D5D9E2;  /* borders */
+  --jqb-stone: #6C7079;  /* secondary text */
+  --jqb-text:  #2c2b25;  /* body text (warmer than ink) */
+  --jqb-accent:#1E73BE;  /* blue link/accent */
+  --jqb-ease:  cubic-bezier(.16, 1, .3, 1);
 }
 
 /* === DÖLJ WIX BLOG CHROME — editorial cleanup för pixel-match Götadental === */
@@ -227,39 +231,38 @@ ${isPost ? `
 
 .blog-post-description-font,
 [data-hook="post-description"],
-.post-page-content p {
+.post-page-content p,
+[data-hook="post-content"] p {
   font-family: var(--jqb-serif) !important;
-  font-size: 1.05rem !important;
-  line-height: 1.7 !important;
-  color: var(--jqb-ink-2) !important;
-  max-width: 65ch;
+  font-size: 17px !important;
+  line-height: 1.78 !important;
+  color: var(--jqb-text) !important;
+  max-width: none !important;
 }
 
-/* H2 i posten — sekretsubtitlar */
+/* H2 — Götadental .gd-content h2 exakt */
 .post-page-content h2,
 [data-hook="post-content"] h2 {
   font-family: var(--jqb-serif) !important;
   font-weight: 400 !important;
-  font-size: clamp(1.5rem, 2.6vw, 2.2rem) !important;
+  font-size: clamp(1.6rem, 2.6vw, 2.2rem) !important;
   line-height: 1.18 !important;
   letter-spacing: -.018em !important;
   color: var(--jqb-ink) !important;
-  margin-top: clamp(48px, 6vw, 80px) !important;
-  margin-bottom: clamp(16px, 1.8vw, 24px) !important;
-  max-width: 22ch;
+  margin: 2em 0 .55em !important;
+  max-width: none !important;
 }
 
-/* H3 — för "Varför specialist" 01/02/03 kort */
+/* H3 — Götadental .gd-content h3 exakt */
 .post-page-content h3,
 [data-hook="post-content"] h3 {
   font-family: var(--jqb-serif) !important;
   font-weight: 400 !important;
-  font-size: clamp(1.25rem, 1.8vw, 1.65rem) !important;
-  line-height: 1.18 !important;
+  font-size: 1.4rem !important;
+  line-height: 1.25 !important;
   letter-spacing: -.012em !important;
   color: var(--jqb-ink) !important;
-  margin-top: clamp(32px, 4vw, 52px) !important;
-  margin-bottom: 12px !important;
+  margin: 1.7em 0 .45em !important;
 }
 
 /* Inline italic (våra meta-rows + faktagranskad-rad) */
@@ -733,15 +736,22 @@ html body [data-hook="post-page-root"] {
   margin: 0 auto !important;
   padding: 0 !important;
 }
+/* PAGE BG — Götadental cream-beige (#F0ECE2). Förrut vit Wix-default. */
+html body,
+html body [data-hook="post-page-root"] {
+  background-color: var(--jqb-bg) !important;
+}
+
 html body [data-hook="post-content"],
 html body .post-page-content,
 html body article[class*="post-content"] {
-  max-width: 860px !important;
+  max-width: 760px !important;
   width: 100% !important;
   margin: 0 auto !important;
-  padding: 0 24px !important;
+  padding: clamp(48px, 7vw, 96px) 5vw !important;
   text-align: left !important;
   box-sizing: border-box !important;
+  background-color: transparent !important;
 }
 html body [data-hook="post-content"] > *,
 html body .post-page-content > *,
@@ -769,23 +779,25 @@ html body .post-page-content h3 {
 html body [data-hook="post-title"],
 html body [data-hook="post-description"],
 html body [data-hook="post-page-root"] ul:has([data-hook="time-ago"]) {
-  max-width: 860px !important;
+  max-width: 760px !important;
   margin-left: auto !important;
   margin-right: auto !important;
   padding-left: 24px !important;
   padding-right: 24px !important;
   text-align: left !important;
 }
-/* Hero image kan vara bredare än text (1100px enligt befintlig regel) */
+/* Hero image — Götadental: 16/9 aspect inom content-bredd */
 html body [data-hook="post-hero-image"] {
-  max-width: 1100px !important;
+  max-width: 760px !important;
   margin: clamp(20px, 3vw, 36px) auto clamp(32px, 5vw, 56px) !important;
-  text-align: center !important;
+  padding: 0 5vw !important;
 }
 html body [data-hook="post-hero-image"] img {
-  max-width: 100% !important;
   width: 100% !important;
+  aspect-ratio: 16 / 9 !important;
+  object-fit: cover !important;
   height: auto !important;
+  border-radius: 0 !important;
 }
 /* Inline IMAGE-nodes i body (mid-article) — center + full text-width */
 html body [data-hook="post-content"] figure,
@@ -797,17 +809,53 @@ html body [data-hook="post-content"] img {
   width: 100% !important;
   height: auto !important;
   margin: clamp(24px, 3vw, 40px) 0 !important;
-  border-radius: 4px !important;
+  border-radius: 0 !important;
   display: block !important;
 }
-/* Blockquote / TL;DR-block */
+
+/* === Pill-button — Götadental-exakt för /boka-länkar === */
+html body [data-hook="post-content"] p a[href="/boka"] {
+  display: inline-block !important;
+  background: var(--jqb-accent) !important;
+  color: #fff !important;
+  border-radius: 100px !important;
+  padding: 16px 32px !important;
+  font-family: var(--jqb-sans) !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  letter-spacing: .2em !important;
+  text-transform: uppercase !important;
+  text-decoration: none !important;
+  background-image: none !important;
+  margin: 4px 0 !important;
+  transition: background .25s var(--jqb-ease) !important;
+}
+html body [data-hook="post-content"] p a[href="/boka"]:hover {
+  background: #185c97 !important;
+  color: #fff !important;
+}
+/* Container-paragrafen för /boka-CTA: bättre breathing */
+html body [data-hook="post-content"] p:has(> a[href="/boka"]) {
+  margin: clamp(28px, 3.4vw, 40px) 0 !important;
+}
+/* Blockquote — Götadental-stil: subtilt, lugnt, ingen tung accent-kant */
 html body [data-hook="post-content"] blockquote {
-  border-left: 3px solid var(--jqb-accent) !important;
-  background: var(--jqb-cream) !important;
-  padding: clamp(20px, 2.4vw, 28px) clamp(20px, 2.4vw, 28px) !important;
-  margin: clamp(24px, 3vw, 36px) 0 !important;
+  border: 0 !important;
+  border-left: 2px solid var(--jqb-line) !important;
+  background: transparent !important;
+  padding: 4px 0 4px 28px !important;
+  margin: clamp(28px, 3.4vw, 40px) 0 !important;
   font-style: italic !important;
-  color: var(--jqb-ink-2) !important;
+  font-size: 19px !important;
+  line-height: 1.6 !important;
+  color: var(--jqb-stone) !important;
+}
+html body [data-hook="post-content"] blockquote p {
+  font-style: italic !important;
+  color: var(--jqb-stone) !important;
+  font-size: 19px !important;
+  line-height: 1.6 !important;
+  margin: 0 !important;
 }
 /* Bulleted/Ordered lists — synliga prickar/siffror */
 html body [data-hook="post-content"] ul {
@@ -840,6 +888,55 @@ html body [data-hook="post-content"] .jq-inline-cta a {
   text-decoration: underline !important;
   text-underline-offset: 4px !important;
   border-bottom: none !important;
+  font-weight: 500 !important;
+}
+
+/* === Götadental-exakt: hr-divider === */
+html body [data-hook="post-content"] hr,
+html body .post-page-content hr {
+  border: 0 !important;
+  border-top: 1px solid var(--jqb-line) !important;
+  margin: 36px 0 !important;
+  background: none !important;
+}
+
+/* === Götadental-exakt: link underline diagonal wipe (premium) === */
+html body [data-hook="post-content"] a:not([data-jq-cta] a):not(.jq-inline-cta a),
+html body .post-page-content a {
+  position: relative !important;
+  color: var(--jqb-ink) !important;
+  text-decoration: none !important;
+  background-image: linear-gradient(currentColor, currentColor) !important;
+  background-size: 100% 1px !important;
+  background-repeat: no-repeat !important;
+  background-position: 0 100% !important;
+  border-bottom: none !important;
+  transition: background-size .4s var(--jqb-ease), color .2s ease !important;
+}
+html body [data-hook="post-content"] a:hover {
+  color: var(--jqb-accent) !important;
+}
+
+/* === Götadental-exakt: post-title större + tight tracking === */
+html body [data-hook="post-title"] {
+  font-family: var(--jqb-serif) !important;
+  font-weight: 400 !important;
+  font-size: clamp(2.2rem, 5.4vw, 3.8rem) !important;
+  line-height: 1.05 !important;
+  letter-spacing: -.028em !important;
+  color: var(--jqb-ink) !important;
+  margin-top: clamp(40px, 5vw, 64px) !important;
+  margin-bottom: 24px !important;
+}
+
+/* === Eyebrow meta — exakt Götadental (10px tracking 0.22em) === */
+html body [data-hook="post-page-root"] [data-hook="time-ago"],
+html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
+  font-family: var(--jqb-sans) !important;
+  font-size: 10px !important;
+  letter-spacing: .22em !important;
+  text-transform: uppercase !important;
+  color: var(--jqb-stone) !important;
   font-weight: 500 !important;
 }
 
