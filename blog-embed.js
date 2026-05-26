@@ -940,16 +940,39 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
   font-weight: 500 !important;
 }
 
-/* === MOBILE — reducera padding + säkerställ läsbar typografi ======== */
+/* === MOBILE — Wix tvingar 320px viewport på blog. Force full-width === */
 @media (max-width: 720px) {
+  html body [data-hook="post-page-root"],
+  html body [data-hook="post-page"],
+  html body [data-hook="post-page-root"] [data-hook="bgLayers"] {
+    width: 100% !important;
+    max-width: 100vw !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    box-sizing: border-box !important;
+  }
+  /* Wix injicerar en category-dropdown ovanför post på mobile — dölj */
+  html body [data-hook="category-dropdown"],
+  html body [data-hook="header-categories-mobile-button"],
+  html body [data-hook="categories-list"] {
+    display: none !important;
+  }
   html body [data-hook="post-content"],
   html body .post-page-content,
   html body article[class*="post-content"],
   html body [data-hook="post-title"],
   html body [data-hook="post-description"],
   html body [data-hook="post-page-root"] ul:has([data-hook="time-ago"]) {
-    padding-left: 18px !important;
-    padding-right: 18px !important;
+    padding-left: 5vw !important;
+    padding-right: 5vw !important;
+  }
+  /* Mobile title size — inte gigantisk-stor */
+  html body [data-hook="post-title"] {
+    font-size: clamp(1.9rem, 7vw, 2.4rem) !important;
+    line-height: 1.1 !important;
+    letter-spacing: -.02em !important;
   }
   html body [data-hook="post-content"] p,
   html body .post-page-content p {
