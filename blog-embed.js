@@ -797,6 +797,26 @@ html body .post-page-content h3 {
   margin-right: 0 !important;
   box-sizing: border-box !important;
 }
+/* Götadental-stil eyebrow ovanför varje H2 i content
+   (injected via JS — injectEyebrows()) */
+html body [data-hook="post-content"] .jq-eyebrow,
+html body .post-page-content .jq-eyebrow {
+  display: block !important;
+  font-family: var(--jqb-sans) !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.18em !important;
+  text-transform: uppercase !important;
+  color: var(--jqb-stone, #7c6f5a) !important;
+  margin: clamp(40px, 5vw, 64px) 0 6px 0 !important;
+  padding: 0 !important;
+  line-height: 1 !important;
+}
+/* H2 efter eyebrow: ta bort top-margin så de blir visuellt grupperade */
+html body [data-hook="post-content"] .jq-eyebrow + h2,
+html body .post-page-content .jq-eyebrow + h2 {
+  margin-top: 8px !important;
+}
 /* Post title + meta också vänsterställt + 720px */
 html body [data-hook="post-title"],
 html body [data-hook="post-description"],
@@ -1321,6 +1341,7 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
                           document.querySelector(".post-page-content");
           if (contentEl && contentEl.querySelectorAll("h2").length > 0) {
             clearInterval(postRetryTimer);
+            try { injectEyebrows(); } catch(e) {}
             try { injectMidArticleCta(); } catch(e) {}
             try { injectKeywordLinks(); } catch(e) {}
           }
@@ -1483,11 +1504,43 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
         '<span class="jq-mid-cta-eyebrow">Nästa steg</span>'
         + '<p class="jq-mid-cta-t">Frågor om <em>din</em> situation?</p>'
         + '<div class="jq-mid-cta-btns">'
-        + '<a class="jq-mid-cta-btn jq-mid-cta-btn--primary" href="/boka">Boka kostnadsfri konsultation</a>'
+        + '<a class="jq-mid-cta-btn jq-mid-cta-btn--primary" href="/boka">Boka konsultation</a>'
         + '<a class="jq-mid-cta-btn jq-mid-cta-btn--secondary" href="tel:+46317135784">031‑713 57 84</a>'
         + '</div>';
       try { insertAfter.parentNode.insertBefore(cta, insertAfter.nextSibling); }
       catch(e) { console.error("[JQ.blog] injectMidArticleCta:", e); }
+    }
+
+    // === EYEBROW OVANFÖR VARJE H2 i CONTENT (Götadental-stil) ========= //
+    // Götadental's posts har <span class="jq-eyebrow">[label]</span><h2>
+    // ovanför varje sektion. Vi auto-injicerar numbered eyebrows.
+    function injectEyebrows() {
+      var contentRoot = document.querySelector("[data-hook='post-content']") ||
+                        document.querySelector(".post-page-content") ||
+                        document.querySelector("article");
+      if (!contentRoot) return;
+      var h2s = Array.from(contentRoot.querySelectorAll("h2"));
+      h2s.forEach(function(h2, i) {
+        // Hoppa över H2 som redan har eyebrow precis ovanför
+        var prev = h2.previousElementSibling;
+        if (prev && prev.classList && prev.classList.contains("jq-eyebrow")) return;
+        // Hoppa över om H2 är inom en injectExtras-sektion (jq-blog-extra)
+        if (h2.closest && h2.closest("#jq-blog-extra")) return;
+        // Hoppa över FAQ-rubrik (text contains "Vanliga frågor")
+        var labelText;
+        var h2Text = (h2.textContent || "").trim().toLowerCase();
+        if (/vanliga frågor|faq/.test(h2Text)) {
+          labelText = "Vanliga frågor";
+        } else {
+          var n = String(i + 1).padStart(2, "0");
+          labelText = n + " · Avsnitt";
+        }
+        var eb = document.createElement("span");
+        eb.className = "jq-eyebrow";
+        eb.textContent = labelText;
+        try { h2.parentNode.insertBefore(eb, h2); }
+        catch(e) { console.error("[JQ.blog] injectEyebrows:", e); }
+      });
     }
 
     // === KEYWORD AUTO-LINK (första förekomst per behandling) ============ //
