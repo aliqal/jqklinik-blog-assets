@@ -995,19 +995,75 @@ html body .jq-post-hero-ctas * {
   visibility: visible !important;
   opacity: 1 !important;
 }
-/* Floating fallback — om DOM-injection misslyckats, visa fixerat */
-.jq-post-hero-ctas--floating {
+/* Floating bar — alltid synlig (Wix kan inte ta bort) */
+html body aside.jq-post-hero-ctas--floating,
+aside.jq-post-hero-ctas--floating {
   position: fixed !important;
-  bottom: 24px !important;
+  bottom: 16px !important;
   left: 50% !important;
   transform: translateX(-50%) !important;
-  z-index: 9999 !important;
-  background: rgba(244,241,234,0.95) !important;
-  padding: 12px 16px !important;
+  z-index: 2147483647 !important;
+  background: rgba(244,241,234,0.97) !important;
+  padding: 10px 14px !important;
   border-radius: 999px !important;
-  box-shadow: 0 12px 32px -8px rgba(0,0,0,0.25) !important;
-  backdrop-filter: blur(8px) !important;
+  box-shadow: 0 12px 40px -8px rgba(0,0,0,0.35), 0 2px 8px -2px rgba(0,0,0,0.15) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
   margin: 0 !important;
+  border: 1px solid rgba(26,24,21,0.08) !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 8px !important;
+  width: auto !important;
+  max-width: calc(100vw - 32px) !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+aside.jq-post-hero-ctas--floating .jq-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 12px 22px !important;
+  border-radius: 999px !important;
+  font-family: var(--jqb-sans, "Archivo", system-ui, sans-serif) !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+  text-decoration: none !important;
+  white-space: nowrap !important;
+  border: 1px solid transparent !important;
+  transition: background .3s ease, color .3s ease !important;
+}
+aside.jq-post-hero-ctas--floating .jq-btn--solid {
+  background: #1a1815 !important;
+  color: #f4f1ea !important;
+}
+aside.jq-post-hero-ctas--floating .jq-btn--solid:hover {
+  background: #000 !important;
+}
+aside.jq-post-hero-ctas--floating .jq-btn--ghost-dark {
+  background: transparent !important;
+  color: #1a1815 !important;
+  border: 1px solid rgba(26,24,21,0.3) !important;
+}
+aside.jq-post-hero-ctas--floating .jq-btn--ghost-dark:hover {
+  background: rgba(26,24,21,0.06) !important;
+  border-color: #1a1815 !important;
+}
+@media (max-width: 720px) {
+  aside.jq-post-hero-ctas--floating {
+    bottom: 12px !important;
+    padding: 8px !important;
+  }
+  aside.jq-post-hero-ctas--floating .jq-btn {
+    padding: 10px 14px !important;
+    font-size: 11px !important;
+  }
+  aside.jq-post-hero-ctas--floating .jq-btn--ghost-dark span,
+  aside.jq-post-hero-ctas--floating .jq-btn--ghost-dark { font-size: 11px !important; }
 }
 .jq-post-hero-ctas .jq-btn {
   display: inline-flex !important;
@@ -1624,15 +1680,25 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
       catch(e) { console.error("[JQ.blog] injectMidArticleCta:", e); }
     }
 
-    // === HERO CTA — synliga CTA-knappar direkt under post-title ========= //
-    // Götadental har CTA-knappar i hero. Wix visar inte detta — vi injicerar.
-    // Robust: använd flera fallback-selektorer, MutationObserver att re-trigger,
-    // lägg DIRECT i body som final fallback så CTAs ALLTID syns.
+    // === HERO CTA — ALLTID-SYNLIG FLOATING BAR ========================= //
+    // Wix tar bort element som injectas i deras managed DOM-tree. Lösning:
+    // använd <aside> direkt på document.body med position:fixed — utanför
+    // Wix's tree så de aldrig kan ta bort den. Re-injicerar via interval
+    // som backup. Alltid synlig längst ner på post-pages.
     function injectHeroCTAs() {
       if (document.querySelector(".jq-post-hero-ctas")) return true;
       var ctaHtml =
         '<a class="jq-btn jq-btn--solid" href="/boka">Boka konsultation <span aria-hidden="true">→</span></a>' +
         '<a class="jq-btn jq-btn--ghost-dark" href="tel:+46317135784">031-713 57 84</a>';
+      // Som <aside> top-level — outside Wix-tree
+      var aside = document.createElement("aside");
+      aside.className = "jq-post-hero-ctas jq-post-hero-ctas--floating";
+      aside.setAttribute("role", "complementary");
+      aside.setAttribute("aria-label", "Boka konsultation");
+      aside.innerHTML = ctaHtml;
+      try { document.body.appendChild(aside); return true; } catch(_) {}
+
+      // Defensive fallback — försök inom Wix-tree också
       var ctaBlock = document.createElement("div");
       ctaBlock.className = "jq-post-hero-ctas";
       ctaBlock.innerHTML = ctaHtml;
