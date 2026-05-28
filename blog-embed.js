@@ -969,6 +969,74 @@ html body [data-hook="post-title"] {
   color: var(--jqb-ink) !important;
   margin-top: clamp(40px, 5vw, 64px) !important;
   margin-bottom: 24px !important;
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
+  hyphens: none !important;
+}
+
+/* === Hero CTAs — injected via injectHeroCTAs() === */
+.jq-post-hero-ctas {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 12px !important;
+  margin: clamp(28px, 3.5vw, 44px) 0 clamp(40px, 5vw, 60px) 0 !important;
+  max-width: 720px !important;
+}
+.jq-post-hero-ctas .jq-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 16px 28px !important;
+  border-radius: 999px !important;
+  font-family: var(--jqb-sans) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.04em !important;
+  text-transform: uppercase !important;
+  text-decoration: none !important;
+  border: 1px solid transparent !important;
+  transition: transform .3s var(--jqb-ease, cubic-bezier(.2,.9,.2,1)), background .3s ease, color .3s ease, border-color .3s ease !important;
+  cursor: pointer !important;
+}
+.jq-post-hero-ctas .jq-btn--solid {
+  background: var(--jqb-ink, #1a1815) !important;
+  color: var(--jqb-cream, #f4f1ea) !important;
+}
+.jq-post-hero-ctas .jq-btn--solid:hover {
+  background: #000 !important;
+  transform: translateY(-2px) !important;
+}
+.jq-post-hero-ctas .jq-btn--solid span {
+  transition: transform .3s var(--jqb-ease, cubic-bezier(.2,.9,.2,1)) !important;
+}
+.jq-post-hero-ctas .jq-btn--solid:hover span { transform: translateX(4px) !important; }
+.jq-post-hero-ctas .jq-btn--ghost-dark {
+  background: transparent !important;
+  color: var(--jqb-ink, #1a1815) !important;
+  border: 1px solid rgba(26,24,21,0.3) !important;
+}
+.jq-post-hero-ctas .jq-btn--ghost-dark:hover {
+  border-color: var(--jqb-ink, #1a1815) !important;
+  background: rgba(26,24,21,0.04) !important;
+}
+@media (max-width: 720px) {
+  .jq-post-hero-ctas { flex-direction: column !important; align-items: stretch !important; }
+  .jq-post-hero-ctas .jq-btn { justify-content: center !important; padding: 14px 20px !important; }
+}
+
+/* === Text-brytning + overflow-säkerhet på allt body-content === */
+html body [data-hook="post-content"] p,
+html body [data-hook="post-content"] h2,
+html body [data-hook="post-content"] h3,
+html body [data-hook="post-content"] li,
+html body [data-hook="post-content"] blockquote {
+  word-break: normal !important;
+  overflow-wrap: break-word !important;
+  hyphens: none !important;
+}
+html body [data-hook="post-content"] a {
+  word-break: normal !important;
+  overflow-wrap: anywhere !important;
 }
 
 /* === Eyebrow meta — exakt Götadental (10px tracking 0.22em) === */
@@ -1341,6 +1409,7 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
                           document.querySelector(".post-page-content");
           if (contentEl && contentEl.querySelectorAll("h2").length > 0) {
             clearInterval(postRetryTimer);
+            try { injectHeroCTAs(); } catch(e) {}
             try { injectEyebrows(); } catch(e) {}
             try { injectMidArticleCta(); } catch(e) {}
             try { injectKeywordLinks(); } catch(e) {}
@@ -1509,6 +1578,27 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
         + '</div>';
       try { insertAfter.parentNode.insertBefore(cta, insertAfter.nextSibling); }
       catch(e) { console.error("[JQ.blog] injectMidArticleCta:", e); }
+    }
+
+    // === HERO CTA — synliga CTA-knappar direkt under post-title ========= //
+    // Götadental har CTA-knappar i hero (Boka konsultation + telefon). Wix
+    // visar inte detta — vi injicerar dem manuellt.
+    function injectHeroCTAs() {
+      if (document.querySelector(".jq-post-hero-ctas")) return;
+      var titleEl = document.querySelector("[data-hook='post-title']");
+      if (!titleEl) return;
+      // Hitta hela post-header (title + meta) container
+      var headerWrap = titleEl.closest("[data-hook='post-page-root']") || titleEl.parentElement;
+      if (!headerWrap) return;
+      // Lägg CTAs efter post-description eller post-title
+      var anchor = document.querySelector("[data-hook='post-description']") || titleEl;
+      var ctaBlock = document.createElement("div");
+      ctaBlock.className = "jq-post-hero-ctas";
+      ctaBlock.innerHTML =
+        '<a class="jq-btn jq-btn--solid" href="/boka">Boka konsultation <span aria-hidden="true">→</span></a>' +
+        '<a class="jq-btn jq-btn--ghost-dark" href="tel:+46317135784">031-713 57 84</a>';
+      try { anchor.parentNode.insertBefore(ctaBlock, anchor.nextSibling); }
+      catch(e) { console.error("[JQ.blog] injectHeroCTAs:", e); }
     }
 
     // === EYEBROW OVANFÖR VARJE H2 i CONTENT (Götadental-stil) ========= //
