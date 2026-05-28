@@ -1518,6 +1518,24 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
             try { injectEyebrows(); } catch(e) {}
             try { injectMidArticleCta(); } catch(e) {}
             try { injectKeywordLinks(); } catch(e) {}
+            // Re-injection watcher: Wix re-renderar och tar bort våra element.
+            // Kollar var 1s i 30s + MutationObserver för instant re-inject.
+            try {
+              var watchAttempts = 0;
+              var watchT = setInterval(function() {
+                watchAttempts++;
+                try { injectEyebrows(); } catch(e) {}
+                try { injectMidArticleCta(); } catch(e) {}
+                if (watchAttempts >= 30) clearInterval(watchT);
+              }, 1000);
+              var moPost = new MutationObserver(function() {
+                if (!document.querySelector(".jq-mid-cta")) {
+                  try { injectMidArticleCta(); } catch(e) {}
+                }
+              });
+              moPost.observe(document.body, { childList: true, subtree: true });
+              setTimeout(function() { try { moPost.disconnect(); } catch(_) {} }, 30000);
+            } catch(_) {}
           }
           if (postRetry >= 15) clearInterval(postRetryTimer);
         }, 600);
