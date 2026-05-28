@@ -975,14 +975,23 @@ html body [data-hook="post-title"] {
 }
 
 /* === Hero CTAs — injected via injectHeroCTAs() === */
-.jq-post-hero-ctas {
+html body .jq-post-hero-ctas,
+html body [data-hook="post-page-root"] .jq-post-hero-ctas {
   display: flex !important;
   flex-wrap: wrap !important;
   gap: 12px !important;
-  margin: clamp(28px, 3.5vw, 44px) 0 clamp(40px, 5vw, 60px) 0 !important;
+  margin: clamp(28px, 3.5vw, 44px) auto clamp(40px, 5vw, 60px) auto !important;
   max-width: 720px !important;
   position: relative !important;
-  z-index: 50 !important;
+  z-index: 100 !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  padding: 0 16px !important;
+  pointer-events: auto !important;
+}
+html body .jq-post-hero-ctas * {
   visibility: visible !important;
   opacity: 1 !important;
 }
@@ -1245,25 +1254,26 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
 
     // === Scroll progress + chapter rail JS ========================== //
     // === ROBUST CONTENT ROOT FINDER ============================== //
-    // Wix Blog renderar inte alltid [data-hook="post-content"]. Nyare posts
-    // har rcv-block1..N data-hooks inom en wrapping <article>. Detta söker
-    // genom flera fallbacks tills content-root hittas.
+    // Wix renderar inte alltid [data-hook='post-content']. Föredra kandidater
+    // som faktiskt har H2 i sig — annars failar mid-CTA injection.
     function findContentRoot() {
-      return (
-        document.querySelector("[data-hook='post-content']") ||
-        document.querySelector(".post-page-content") ||
-        // Hitta parent av rcv-block1 (första content-block)
+      var candidates = [
+        document.querySelector("[data-hook='post-content']"),
+        document.querySelector(".post-page-content"),
+        document.querySelector("[data-hook='post-page']"),
+        document.querySelector("[data-hook='post']"),
+        document.querySelector("[data-hook='post-page-root']"),
         (function () {
           var rcv = document.querySelector("[data-hook^='rcv-block']");
           return rcv ? rcv.parentElement : null;
-        })() ||
-        // Inre article inom post-page-root (Wix new template)
-        document.querySelector("[data-hook='post-page-root'] article article") ||
-        document.querySelector("article article") ||
-        document.querySelector("[data-hook='post-page']") ||
-        document.querySelector("[data-hook='post']") ||
-        document.querySelector("[data-hook='post-page-root']")
-      );
+        })(),
+      ];
+      for (var i = 0; i < candidates.length; i++) {
+        var c = candidates[i];
+        if (c && c.querySelectorAll && c.querySelectorAll("h2").length > 0) return c;
+      }
+      for (var j = 0; j < candidates.length; j++) if (candidates[j]) return candidates[j];
+      return null;
     }
 
     function init() {
