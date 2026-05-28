@@ -981,6 +981,24 @@ html body [data-hook="post-title"] {
   gap: 12px !important;
   margin: clamp(28px, 3.5vw, 44px) 0 clamp(40px, 5vw, 60px) 0 !important;
   max-width: 720px !important;
+  position: relative !important;
+  z-index: 50 !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+/* Floating fallback — om DOM-injection misslyckats, visa fixerat */
+.jq-post-hero-ctas--floating {
+  position: fixed !important;
+  bottom: 24px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  z-index: 9999 !important;
+  background: rgba(244,241,234,0.95) !important;
+  padding: 12px 16px !important;
+  border-radius: 999px !important;
+  box-shadow: 0 12px 32px -8px rgba(0,0,0,0.25) !important;
+  backdrop-filter: blur(8px) !important;
+  margin: 0 !important;
 }
 .jq-post-hero-ctas .jq-btn {
   display: inline-flex !important;
@@ -1409,7 +1427,7 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
                           document.querySelector(".post-page-content");
           if (contentEl && contentEl.querySelectorAll("h2").length > 0) {
             clearInterval(postRetryTimer);
-            try { injectHeroCTAs(); } catch(e) {}
+            try { watchAndInjectHeroCTAs(); } catch(e) {}
             try { injectEyebrows(); } catch(e) {}
             try { injectMidArticleCta(); } catch(e) {}
             try { injectKeywordLinks(); } catch(e) {}
@@ -1581,24 +1599,58 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
     }
 
     // === HERO CTA — synliga CTA-knappar direkt under post-title ========= //
-    // Götadental har CTA-knappar i hero (Boka konsultation + telefon). Wix
-    // visar inte detta — vi injicerar dem manuellt.
+    // Götadental har CTA-knappar i hero. Wix visar inte detta — vi injicerar.
+    // Robust: använd flera fallback-selektorer, MutationObserver att re-trigger,
+    // lägg DIRECT i body som final fallback så CTAs ALLTID syns.
     function injectHeroCTAs() {
-      if (document.querySelector(".jq-post-hero-ctas")) return;
-      var titleEl = document.querySelector("[data-hook='post-title']");
-      if (!titleEl) return;
-      // Hitta hela post-header (title + meta) container
-      var headerWrap = titleEl.closest("[data-hook='post-page-root']") || titleEl.parentElement;
-      if (!headerWrap) return;
-      // Lägg CTAs efter post-description eller post-title
-      var anchor = document.querySelector("[data-hook='post-description']") || titleEl;
-      var ctaBlock = document.createElement("div");
-      ctaBlock.className = "jq-post-hero-ctas";
-      ctaBlock.innerHTML =
+      if (document.querySelector(".jq-post-hero-ctas")) return true;
+      var ctaHtml =
         '<a class="jq-btn jq-btn--solid" href="/boka">Boka konsultation <span aria-hidden="true">→</span></a>' +
         '<a class="jq-btn jq-btn--ghost-dark" href="tel:+46317135784">031-713 57 84</a>';
-      try { anchor.parentNode.insertBefore(ctaBlock, anchor.nextSibling); }
-      catch(e) { console.error("[JQ.blog] injectHeroCTAs:", e); }
+      var ctaBlock = document.createElement("div");
+      ctaBlock.className = "jq-post-hero-ctas";
+      ctaBlock.innerHTML = ctaHtml;
+
+      // Försök 1: efter post-description
+      var desc = document.querySelector("[data-hook='post-description']");
+      if (desc && desc.parentNode) {
+        try { desc.parentNode.insertBefore(ctaBlock, desc.nextSibling); return true; } catch(_) {}
+      }
+      // Försök 2: efter post-title
+      var title = document.querySelector("[data-hook='post-title']");
+      if (title && title.parentNode) {
+        try { title.parentNode.insertBefore(ctaBlock, title.nextSibling); return true; } catch(_) {}
+      }
+      // Försök 3: före post-content
+      var content = document.querySelector("[data-hook='post-content']");
+      if (content && content.parentNode) {
+        try { content.parentNode.insertBefore(ctaBlock, content); return true; } catch(_) {}
+      }
+      // Försök 4: fixed-position i body (alltid synligt)
+      ctaBlock.classList.add("jq-post-hero-ctas--floating");
+      try { document.body.appendChild(ctaBlock); return true; } catch(_) {}
+      return false;
+    }
+
+    // Robust trigger — MutationObserver + retry tills CTAs är på plats
+    function watchAndInjectHeroCTAs() {
+      if (!isPost) return;
+      // Försök direkt
+      if (injectHeroCTAs()) return;
+      // Retry-poll var 400ms upp till 20s
+      var attempts = 0;
+      var t = setInterval(function() {
+        attempts++;
+        if (injectHeroCTAs() || attempts >= 50) clearInterval(t);
+      }, 400);
+      // Plus MutationObserver: re-inject om Wix re-renderar och tar bort vår CTA
+      try {
+        var mo = new MutationObserver(function() {
+          if (!document.querySelector(".jq-post-hero-ctas")) injectHeroCTAs();
+        });
+        mo.observe(document.body, { childList: true, subtree: true });
+        setTimeout(function() { try { mo.disconnect(); } catch(_) {} }, 30000);
+      } catch(_) {}
     }
 
     // === EYEBROW OVANFÖR VARJE H2 i CONTENT (Götadental-stil) ========= //
