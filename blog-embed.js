@@ -1244,6 +1244,28 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
     document.head.appendChild(css);
 
     // === Scroll progress + chapter rail JS ========================== //
+    // === ROBUST CONTENT ROOT FINDER ============================== //
+    // Wix Blog renderar inte alltid [data-hook="post-content"]. Nyare posts
+    // har rcv-block1..N data-hooks inom en wrapping <article>. Detta söker
+    // genom flera fallbacks tills content-root hittas.
+    function findContentRoot() {
+      return (
+        document.querySelector("[data-hook='post-content']") ||
+        document.querySelector(".post-page-content") ||
+        // Hitta parent av rcv-block1 (första content-block)
+        (function () {
+          var rcv = document.querySelector("[data-hook^='rcv-block']");
+          return rcv ? rcv.parentElement : null;
+        })() ||
+        // Inre article inom post-page-root (Wix new template)
+        document.querySelector("[data-hook='post-page-root'] article article") ||
+        document.querySelector("article article") ||
+        document.querySelector("[data-hook='post-page']") ||
+        document.querySelector("[data-hook='post']") ||
+        document.querySelector("[data-hook='post-page-root']")
+      );
+    }
+
     function init() {
       // Mobile: Wix sätter `width: 320px` inline på sina container-divs
       // som CSS !important INTE alltid kan övertrumfra. Force-width allt
@@ -1423,8 +1445,7 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
         var postRetry = 0;
         var postRetryTimer = setInterval(function () {
           postRetry++;
-          var contentEl = document.querySelector("[data-hook='post-content']") ||
-                          document.querySelector(".post-page-content");
+          var contentEl = findContentRoot();
           if (contentEl && contentEl.querySelectorAll("h2").length > 0) {
             clearInterval(postRetryTimer);
             try { watchAndInjectHeroCTAs(); } catch(e) {}
@@ -1441,10 +1462,7 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
 
       // Hitta H2:s i post-content. Wix använder olika wrappers — vi söker brett.
       const contentRoot =
-        document.querySelector("[data-hook='post-content']") ||
-        document.querySelector(".post-page-content") ||
-        document.querySelector("article") ||
-        document.body;
+        findContentRoot();
       const h2s = Array.from(contentRoot.querySelectorAll("h2"));
       if (h2s.length < 3) return; // för få — skippa rail
 
@@ -1575,9 +1593,7 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
     // === MID-ARTIKEL CTA (injectas efter 2:a H2) ======================== //
     function injectMidArticleCta() {
       if (document.querySelector(".jq-mid-cta")) return;
-      var contentRoot = document.querySelector("[data-hook='post-content']") ||
-                        document.querySelector(".post-page-content") ||
-                        document.querySelector("article") || document.body;
+      var contentRoot = findContentRoot();
       var h2s = Array.from(contentRoot.querySelectorAll("h2"));
       if (h2s.length < 2) return;
       // Sätt CTA efter 2:a H2 (index 1), eller sista om färre
@@ -1622,7 +1638,7 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
         try { title.parentNode.insertBefore(ctaBlock, title.nextSibling); return true; } catch(_) {}
       }
       // Försök 3: före post-content
-      var content = document.querySelector("[data-hook='post-content']");
+      var content = findContentRoot();
       if (content && content.parentNode) {
         try { content.parentNode.insertBefore(ctaBlock, content); return true; } catch(_) {}
       }
@@ -1657,9 +1673,7 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
     // Götadental's posts har <span class="jq-eyebrow">[label]</span><h2>
     // ovanför varje sektion. Vi auto-injicerar numbered eyebrows.
     function injectEyebrows() {
-      var contentRoot = document.querySelector("[data-hook='post-content']") ||
-                        document.querySelector(".post-page-content") ||
-                        document.querySelector("article");
+      var contentRoot = findContentRoot();
       if (!contentRoot) return;
       var h2s = Array.from(contentRoot.querySelectorAll("h2"));
       h2s.forEach(function(h2, i) {
@@ -1687,9 +1701,7 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
 
     // === KEYWORD AUTO-LINK (första förekomst per behandling) ============ //
     function injectKeywordLinks() {
-      var contentRoot = document.querySelector("[data-hook='post-content']") ||
-                        document.querySelector(".post-page-content") ||
-                        document.querySelector("article");
+      var contentRoot = findContentRoot();
       if (!contentRoot) return;
       var treatments = [
         { re: /\b(botox)\b/i, url: "/botox" },
