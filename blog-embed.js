@@ -1620,7 +1620,19 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
       extra.id = "jq-blog-extra";
       extra.setAttribute("aria-label", "JQ.Klinik värdeproposition och vidare läsning");
       extra.innerHTML = whyHtml + ctaHtml + relatedShell;
-      document.body.appendChild(extra);
+      // Infoga FÖRE footern — annars hamnar "Varför specialist"-sektionen efter
+      // footern med en tom vit yta emellan (footern ska alltid vara sist).
+      var footerEl = document.querySelector("jq-footer")
+        || document.querySelector('footer.SITE_FOOTER, footer[data-hook="footer"], #SITE_FOOTER, footer');
+      try {
+        if (footerEl && footerEl.parentNode) {
+          footerEl.parentNode.insertBefore(extra, footerEl);
+        } else {
+          document.body.appendChild(extra);
+        }
+      } catch (e) {
+        document.body.appendChild(extra);
+      }
       if (isPost) fetchRelatedPosts();
     }
 
