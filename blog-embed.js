@@ -1905,9 +1905,15 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
       return t.slice(0, max - 1).replace(/\s+\S*$/, "") + "…";
     }
 
+    // Cache av hämtade inlägg — Wix kan wipa vår injicerade DOM och då
+    // re-injectar vi. Med cache slipper vi re-fetcha RSS (ingen "Laddar"-flash
+    // eller tom vit yta mellan wipe och ny render).
+    var __jqArchivePosts = null;
+
     function renderArchive(posts) {
       const mount = document.getElementById("jq-archive");
       if (!mount) return;
+      if (posts && posts.length) __jqArchivePosts = posts;
       if (!posts.length) {
         mount.innerHTML = '<section class="jq-sec jq-blog-hero"><div class="jq-wrap">'
           + '<span class="jq-eyebrow">Journal</span>'
@@ -2079,6 +2085,12 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
         + '<p class="jq-blog-hero-lede">Laddar artiklar…</p>'
         + '</div></section>';
 
+      // Re-injection efter Wix-wipe → rendera direkt från cache, ingen re-fetch.
+      if (__jqArchivePosts && __jqArchivePosts.length) {
+        renderArchive(__jqArchivePosts);
+        return;
+      }
+
       // Fetch posts via Wix RSS feed — publik, ingen auth behövs.
       console.log("[JQ.blog] fetching RSS /blog-feed.xml");
       try {
@@ -2222,7 +2234,7 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
           document.addEventListener("DOMContentLoaded", startObserve);
         }
         // Avsluta efter 10s — vi har då redan mountad eller gav upp
-        setTimeout(function () { try { mo.disconnect(); console.log("[JQ.blog] MutationObserver disconnected after 10s"); } catch (e) {} }, 10000);
+        setTimeout(function () { try { mo.disconnect(); console.log("[JQ.blog] MutationObserver disconnected after 30s"); } catch (e) {} }, 30000);
       } catch (e) {
         console.error("[JQ.blog] MutationObserver setup failed:", e);
       }
