@@ -610,10 +610,28 @@ html body #jq-archive {
   content: ""; position: absolute; inset: 0 0 auto 0; height: 3px;
   background: linear-gradient(90deg, #C9A468 0%, #E4D3AC 55%, transparent 100%);
 }
+/* Porträttet gör kortet mänskligt och backar löftet om specialist.
+ * Cirkel i ALLA lägen: bloggens textkolumn är bara ~470 px, så en stående
+ * bild vid sidan klämmer ihop texten till en teckenremsa (verifierat i
+ * headless 1280 px). <span> och inte <figure>/<img> naket — Wix
+ * [data-hook="post-content"]-regler tvingar annars width:100% på båda. */
+.jq-mid-cta .jq-mid-cta-fig {
+  display: block !important;
+  width: 66px !important; height: 66px !important;
+  border-radius: 50% !important; overflow: hidden !important;
+  margin: 0 0 16px !important; padding: 0 !important;
+  border: 1px solid #E2D6BC; background: #EFE6D4;
+}
+.jq-mid-cta .jq-mid-cta-fig img {
+  display: block !important; width: 100% !important; height: 100% !important;
+  max-width: none !important; margin: 0 !important; border-radius: 0 !important;
+  object-fit: cover; object-position: 50% 12%;
+}
+
 .jq-mid-cta-eyebrow {
   display: block; font-family: var(--jqb-sans) !important; font-size: 10px !important;
   letter-spacing: .26em; text-transform: uppercase; color: #8A6A32 !important;
-  font-style: normal !important; margin-bottom: 12px;
+  font-style: normal !important; font-weight: 500 !important; margin-bottom: 12px;
 }
 .jq-mid-cta-t {
   font-family: var(--jqb-serif) !important; font-weight: 400 !important;
@@ -626,6 +644,7 @@ html body #jq-archive {
   line-height: 1.6 !important; font-style: normal !important;
   color: #5F5A50 !important; margin: 0 0 16px !important; max-width: 46ch;
 }
+
 /* Meta som chips i stället för punkt-separerad rad: separatorn hamnade först
  * på ny rad vid radbrytning på mobil. Kursiv nollställs explicit — Wix
  * post-content lutar annars all injicerad text. */
@@ -1662,6 +1681,10 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
      * blogg-bannern (blog_quiz_banner, byggd i Blogginlagg.tsx 2026-06-23)
      * hade noll visningar — den komponenten renderas inte på live-/post/*.
      * View räknas en gång per session, först vid 50 % synlighet. */
+    /* Specialistporträttet (samma bild som Om oss) — Wix-transform till exakt
+     * renderad storlek så den inte drar onödig vikt i bloggen. */
+    var JQ_PORTRAIT = "https://static.wixstatic.com/media/a95528_6718bf09f86943a0983bf7c5a1504875~mv2.png/v1/fill/w_296,h_370,al_c,q_85,enc_auto/a95528_6718bf09f86943a0983bf7c5a1504875~mv2.png";
+
     function jqPromo(name, el) {
       if (!el) return;
       function send(type) {
@@ -1796,14 +1819,17 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
       var cta = document.createElement("div");
       cta.className = "jq-mid-cta";
       cta.innerHTML =
-        '<span class="jq-mid-cta-eyebrow">Hitta din behandling</span>'
+        '<div class="jq-mid-cta-row">'
+        + '<span class="jq-mid-cta-fig"><img src="' + JQ_PORTRAIT + '" alt="Jilah Qaljaee, leg. specialisttandläkare" loading="lazy" decoding="async" width="296" height="370"></span>'
+        + '<div class="jq-mid-cta-body">'
+        + '<span class="jq-mid-cta-eyebrow">Hitta din behandling</span>'
         + '<p class="jq-mid-cta-t">Vilken behandling passar <em>dig</em>?</p>'
-        + '<p class="jq-mid-cta-sub">Svara på sex korta frågor så matchar vi dig med rätt behandling, pris och plan — framtaget av leg. specialisttandläkare.</p>'
+        + '<p class="jq-mid-cta-sub">Svara på sex korta frågor så matchar vi dig med rätt behandling, pris och plan — framtaget av Jilah Qaljaee, leg. specialisttandläkare.</p>'
         + '<div class="jq-mid-cta-meta"><span>60 sekunder</span><span>6 frågor</span><span>1 000 kr värdecheck</span></div>'
         + '<div class="jq-mid-cta-btns">'
         + '<a class="jq-mid-cta-btn jq-mid-cta-btn--primary" href="/hitta-din-behandling">Gör quizet<span class="jq-arw" aria-hidden="true">&rarr;</span></a>'
         + '<a class="jq-mid-cta-btn jq-mid-cta-btn--secondary" href="/boka">Boka konsultation</a>'
-        + '</div>';
+        + '</div></div></div>';
       try {
         insertAfter.parentNode.insertBefore(cta, insertAfter.nextSibling);
         jqPromo("blog_mid_cta", cta);
