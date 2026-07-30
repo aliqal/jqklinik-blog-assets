@@ -594,39 +594,75 @@ html body #jq-archive {
 }
 
 /* === MID-ARTIKEL CTA (injectas efter 2:a H2) ======================== */
+/* Kort i varm sand med guldhairline i stället för två nakna linjer.
+ * Wix [data-hook="post-content"] p-regler vinner annars på specificitet och
+ * gjorde underrubriken serif/kursiv — därför !important på typografin här. */
 .jq-mid-cta {
-  border-top: 1px solid var(--jqb-line);
-  border-bottom: 1px solid var(--jqb-line);
-  padding: clamp(24px, 3.5vw, 36px) 0;
-  margin: clamp(32px, 5vw, 52px) 0;
+  position: relative; isolation: isolate;
+  border: 1px solid #E2D6BC; border-radius: 16px;
+  background: linear-gradient(135deg, #FCFAF5 0%, #F4ECDC 100%);
+  padding: clamp(24px, 4vw, 36px);
+  margin: clamp(36px, 6vw, 60px) 0;
+  box-shadow: 0 22px 44px -34px rgba(124, 95, 55, .55);
+  overflow: hidden;
+}
+.jq-mid-cta::before {
+  content: ""; position: absolute; inset: 0 0 auto 0; height: 3px;
+  background: linear-gradient(90deg, #C9A468 0%, #E4D3AC 55%, transparent 100%);
 }
 .jq-mid-cta-eyebrow {
-  display: block; font-family: var(--jqb-sans); font-size: 10px;
-  letter-spacing: .26em; text-transform: uppercase; color: var(--jqb-stone);
-  margin-bottom: 12px;
+  display: block; font-family: var(--jqb-sans) !important; font-size: 10px !important;
+  letter-spacing: .26em; text-transform: uppercase; color: #8A6A32 !important;
+  font-style: normal !important; margin-bottom: 12px;
 }
 .jq-mid-cta-t {
-  font-family: var(--jqb-serif); font-weight: 400;
-  font-size: clamp(1.2rem, 1.8vw, 1.55rem); line-height: 1.2;
-  color: var(--jqb-ink); margin: 0 0 10px;
+  font-family: var(--jqb-serif) !important; font-weight: 400 !important;
+  font-size: clamp(1.35rem, 2.1vw, 1.75rem) !important; line-height: 1.18 !important;
+  color: var(--jqb-ink) !important; margin: 0 0 10px !important; font-style: normal !important;
 }
-.jq-mid-cta-t em { font-style: italic; color: var(--jqb-stone); font-weight: 300; }
+.jq-mid-cta-t em { font-style: italic; color: #8A6A32; font-weight: 300; }
 .jq-mid-cta-sub {
-  font-family: var(--jqb-sans); font-size: 14px; line-height: 1.6;
-  color: var(--jqb-stone); margin: 0 0 18px; max-width: 52ch;
+  font-family: var(--jqb-sans) !important; font-size: 14.5px !important;
+  line-height: 1.6 !important; font-style: normal !important;
+  color: #5F5A50 !important; margin: 0 0 16px !important; max-width: 46ch;
 }
-.jq-mid-cta-btns { display: flex; gap: 12px; flex-wrap: wrap; }
-.jq-mid-cta-btn {
+/* Meta som chips i stället för punkt-separerad rad: separatorn hamnade först
+ * på ny rad vid radbrytning på mobil. Kursiv nollställs explicit — Wix
+ * post-content lutar annars all injicerad text. */
+.jq-mid-cta-meta {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  margin: 0 0 22px;
+}
+.jq-mid-cta-meta span {
   display: inline-flex; align-items: center;
-  padding: 11px 22px; border-radius: 999px;
-  font-family: var(--jqb-sans); font-size: 11px; font-weight: 500;
-  letter-spacing: .16em; text-transform: uppercase; text-decoration: none;
-  transition: background .25s var(--jqb-ease), color .25s var(--jqb-ease), border-color .25s var(--jqb-ease);
+  padding: 5px 12px; border-radius: 999px;
+  border: 1px solid #E2D6BC; background: rgba(255, 253, 248, .7);
+  font-family: var(--jqb-sans) !important; font-size: 10.5px !important;
+  font-style: normal !important; font-weight: 500;
+  letter-spacing: .12em; text-transform: uppercase; color: #8A6A32 !important;
+  line-height: 1.4;
 }
-.jq-mid-cta-btn--primary { background: var(--jqb-ink); color: var(--jqb-cream); }
-.jq-mid-cta-btn--primary:hover { background: #000; }
-.jq-mid-cta-btn--secondary { background: transparent; color: var(--jqb-ink); border: 1px solid var(--jqb-line); }
-.jq-mid-cta-btn--secondary:hover { border-color: var(--jqb-ink); }
+.jq-mid-cta-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+.jq-mid-cta-btn {
+  display: inline-flex; align-items: center; gap: 9px;
+  padding: 13px 26px; border-radius: 999px;
+  font-family: var(--jqb-sans) !important; font-size: 11px !important;
+  font-weight: 600; font-style: normal !important;
+  letter-spacing: .14em; text-transform: uppercase; text-decoration: none !important;
+  border: 1px solid transparent; white-space: nowrap;
+  transition: background .25s var(--jqb-ease), color .25s var(--jqb-ease),
+              border-color .25s var(--jqb-ease), transform .25s var(--jqb-ease),
+              box-shadow .25s var(--jqb-ease);
+}
+.jq-mid-cta-btn--primary {
+  background: var(--jqb-ink); color: #F7F2E6;
+  box-shadow: 0 12px 24px -16px rgba(21, 23, 27, .8);
+}
+.jq-mid-cta-btn--primary:hover { background: #000; transform: translateY(-1px); }
+.jq-mid-cta-btn--primary .jq-arw { transition: transform .25s var(--jqb-ease); }
+.jq-mid-cta-btn--primary:hover .jq-arw { transform: translateX(3px); }
+.jq-mid-cta-btn--secondary { background: transparent; color: #4A4438; border-color: #DBCBAA; }
+.jq-mid-cta-btn--secondary:hover { border-color: #8A6A32; color: var(--jqb-ink); }
 
 /* === INTERNA KEYWORD-LÄNKAR (auto-inject vid första förekomst) ======= */
 .jq-kw-link {
@@ -688,9 +724,26 @@ html body #jq-archive {
   color: var(--jqb-ink-2); margin: 0;
 }
 
-#jq-blog-extra .jq-blog-cta-sec { background: var(--jqb-ink); color: var(--jqb-cream); }
+/* Varm guldglöd uppe till vänster så blocket inte läser som en platt svart
+ * ruta — samma guld (#C9A468) som popupen och mid-CTA:n. */
+#jq-blog-extra .jq-blog-cta-sec {
+  background:
+    radial-gradient(120% 90% at 8% 0%, rgba(201,164,104,.16) 0%, rgba(201,164,104,0) 58%),
+    var(--jqb-ink);
+  color: var(--jqb-cream);
+  border-top: 1px solid rgba(201,164,104,.35);
+}
 #jq-blog-extra .jq-blog-cta { max-width: 820px; margin: 0; text-align: left; }
-#jq-blog-extra .jq-blog-cta .jq-eyebrow { color: rgba(244,241,234,.55); }
+#jq-blog-extra .jq-blog-cta .jq-eyebrow { color: #C9A468; }
+#jq-blog-extra .jq-blog-cta-meta {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px;
+  margin: 0 0 30px; font-family: var(--jqb-sans); font-size: 11px;
+  letter-spacing: .12em; text-transform: uppercase; color: rgba(244,241,234,.6);
+}
+#jq-blog-extra .jq-blog-cta-meta span { display: inline-flex; align-items: center; gap: 8px; }
+#jq-blog-extra .jq-blog-cta-meta span + span::before {
+  content: ""; width: 3px; height: 3px; border-radius: 50%; background: #C9A468;
+}
 #jq-blog-extra .jq-blog-cta-h {
   font-family: var(--jqb-serif); font-weight: 400;
   font-size: clamp(1.8rem, 3.6vw, 2.6rem); line-height: 1.12;
@@ -710,8 +763,14 @@ html body #jq-archive {
   text-decoration: none; border: 1px solid transparent;
   transition: background-color .25s var(--jqb-ease), color .25s var(--jqb-ease), border-color .25s var(--jqb-ease);
 }
-#jq-blog-extra .jq-btn--solid { background: var(--jqb-cream); color: var(--jqb-ink); }
-#jq-blog-extra .jq-btn--solid:hover { background: #fff; }
+/* Guld = quizet (samma signal som popupens knapp), cream = sekundärt. */
+#jq-blog-extra .jq-btn--solid {
+  background: linear-gradient(135deg, #D8B679 0%, #C9A468 100%); color: #1B1710;
+  font-weight: 600; box-shadow: 0 16px 30px -20px rgba(201,164,104,.9);
+}
+#jq-blog-extra .jq-btn--solid:hover { background: #D9B87C; transform: translateY(-1px); }
+#jq-blog-extra .jq-btn--solid .jq-arw { transition: transform .25s var(--jqb-ease); }
+#jq-blog-extra .jq-btn--solid:hover .jq-arw { transform: translateX(3px); }
 #jq-blog-extra .jq-btn--ghost {
   background: transparent; color: var(--jqb-cream); border-color: rgba(244,241,234,.3);
 }
@@ -1656,9 +1715,10 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
       const ctaHtml = '<section class="jq-sec jq-blog-cta-sec"><div class="jq-wrap"><div class="jq-blog-cta">'
         + '<span class="jq-eyebrow">Nästa steg</span>'
         + '<h3 class="jq-blog-cta-h">Vilken behandling passar <em>dig?</em></h3>'
-        + '<p class="jq-blog-cta-lede">Sex korta frågor, under en minut. Du får en personlig rekommendation med behandling, pris och plan — och 1 000 kr på din första behandling.</p>'
+        + '<p class="jq-blog-cta-lede">Svara på sex korta frågor så matchar vi dig med rätt behandling, pris och plan — framtaget av leg. specialisttandläkare med estetik-inriktning.</p>'
+        + '<div class="jq-blog-cta-meta"><span>60 sekunder</span><span>6 frågor</span><span>1 000 kr värdecheck</span></div>'
         + '<div class="jq-blog-cta-btns">'
-        + '<a class="jq-btn jq-btn--solid" href="/hitta-din-behandling">Gör quizet · 1 000 kr</a>'
+        + '<a class="jq-btn jq-btn--solid" href="/hitta-din-behandling">Gör quizet<span class="jq-arw" aria-hidden="true">&rarr;</span></a>'
         + '<a class="jq-btn jq-btn--ghost" href="/boka">Boka konsultation</a>'
         + '</div></div></div></section>';
       const relatedShell = isPost ? '<section class="jq-sec jq-blog-related-sec" id="jq-blog-related-shell"></section>' : '';
@@ -1736,11 +1796,12 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
       var cta = document.createElement("div");
       cta.className = "jq-mid-cta";
       cta.innerHTML =
-        '<span class="jq-mid-cta-eyebrow">Nästa steg</span>'
+        '<span class="jq-mid-cta-eyebrow">Hitta din behandling</span>'
         + '<p class="jq-mid-cta-t">Vilken behandling passar <em>dig</em>?</p>'
-        + '<p class="jq-mid-cta-sub">Sex korta frågor, under en minut. Du får en personlig rekommendation — och 1 000 kr på din första behandling.</p>'
+        + '<p class="jq-mid-cta-sub">Svara på sex korta frågor så matchar vi dig med rätt behandling, pris och plan — framtaget av leg. specialisttandläkare.</p>'
+        + '<div class="jq-mid-cta-meta"><span>60 sekunder</span><span>6 frågor</span><span>1 000 kr värdecheck</span></div>'
         + '<div class="jq-mid-cta-btns">'
-        + '<a class="jq-mid-cta-btn jq-mid-cta-btn--primary" href="/hitta-din-behandling">Gör quizet · 1 000 kr</a>'
+        + '<a class="jq-mid-cta-btn jq-mid-cta-btn--primary" href="/hitta-din-behandling">Gör quizet<span class="jq-arw" aria-hidden="true">&rarr;</span></a>'
         + '<a class="jq-mid-cta-btn jq-mid-cta-btn--secondary" href="/boka">Boka konsultation</a>'
         + '</div>';
       try {
