@@ -608,9 +608,13 @@ html body #jq-archive {
 .jq-mid-cta-t {
   font-family: var(--jqb-serif); font-weight: 400;
   font-size: clamp(1.2rem, 1.8vw, 1.55rem); line-height: 1.2;
-  color: var(--jqb-ink); margin: 0 0 18px;
+  color: var(--jqb-ink); margin: 0 0 10px;
 }
 .jq-mid-cta-t em { font-style: italic; color: var(--jqb-stone); font-weight: 300; }
+.jq-mid-cta-sub {
+  font-family: var(--jqb-sans); font-size: 14px; line-height: 1.6;
+  color: var(--jqb-stone); margin: 0 0 18px; max-width: 52ch;
+}
 .jq-mid-cta-btns { display: flex; gap: 12px; flex-wrap: wrap; }
 .jq-mid-cta-btn {
   display: inline-flex; align-items: center;
@@ -1592,6 +1596,49 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
       highlight();
     }
 
+    /* === PROMO-MÄTNING ================================================ //
+     * Samma räknare som popupen och behandlingsbannern (jqSettings/
+     * promo-counters via /_functions/promoEvent) så bloggens CTA:er går att
+     * jämföra apples-to-apples. Utan mätning upptäcktes aldrig att den gamla
+     * blogg-bannern (blog_quiz_banner, byggd i Blogginlagg.tsx 2026-06-23)
+     * hade noll visningar — den komponenten renderas inte på live-/post/*.
+     * View räknas en gång per session, först vid 50 % synlighet. */
+    function jqPromo(name, el) {
+      if (!el) return;
+      function send(type) {
+        try {
+          fetch("/_functions/promoEvent", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ name: name, type: type }),
+            keepalive: true
+          }).catch(function () {});
+        } catch (e) {}
+        try {
+          if (window.gtag) window.gtag("event", type === "view" ? "view_promotion" : "select_promotion", { promotion_name: name });
+        } catch (e) {}
+      }
+      try {
+        var link = el.querySelector('a[href="/hitta-din-behandling"]');
+        if (link) link.addEventListener("click", function () { send("click"); });
+      } catch (e) {}
+      var key = "jq_promo_" + name;
+      try { if (sessionStorage.getItem(key)) return; } catch (e) {}
+      try {
+        var io = new IntersectionObserver(function (entries) {
+          for (var i = 0; i < entries.length; i++) {
+            if (entries[i].isIntersecting && entries[i].intersectionRatio >= 0.5) {
+              try { sessionStorage.setItem(key, "1"); } catch (e) {}
+              send("view");
+              io.disconnect();
+              break;
+            }
+          }
+        }, { threshold: [0, 0.5] });
+        io.observe(el);
+      } catch (e) {}
+    }
+
     // === Götadental-matching extra-sektioner ========================== //
     function injectExtras() {
       if (document.getElementById("jq-blog-extra")) return;
@@ -1608,11 +1655,11 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
         + '</ol></div></section>';
       const ctaHtml = '<section class="jq-sec jq-blog-cta-sec"><div class="jq-wrap"><div class="jq-blog-cta">'
         + '<span class="jq-eyebrow">Nästa steg</span>'
-        + '<h3 class="jq-blog-cta-h">Frågor om <em>din situation?</em></h3>'
-        + '<p class="jq-blog-cta-lede">Boka en konsultation hos leg. specialisttandläkare med estetik-inriktning. Ingen förskottsbetalning.</p>'
+        + '<h3 class="jq-blog-cta-h">Vilken behandling passar <em>dig?</em></h3>'
+        + '<p class="jq-blog-cta-lede">Sex korta frågor, under en minut. Du får en personlig rekommendation med behandling, pris och plan — och 1 000 kr på din första behandling.</p>'
         + '<div class="jq-blog-cta-btns">'
-        + '<a class="jq-btn jq-btn--solid" href="/boka">Boka konsultation</a>'
-        + '<a class="jq-btn jq-btn--ghost" href="tel:+46317135784">031-713 57 84</a>'
+        + '<a class="jq-btn jq-btn--solid" href="/hitta-din-behandling">Gör quizet · 1 000 kr</a>'
+        + '<a class="jq-btn jq-btn--ghost" href="/boka">Boka konsultation</a>'
         + '</div></div></div></section>';
       const relatedShell = isPost ? '<section class="jq-sec jq-blog-related-sec" id="jq-blog-related-shell"></section>' : '';
 
@@ -1621,6 +1668,7 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
       extra.setAttribute("aria-label", "JQ.Klinik värdeproposition och vidare läsning");
       extra.innerHTML = whyHtml + ctaHtml + relatedShell;
       document.body.appendChild(extra);
+      try { jqPromo("blog_end_cta", extra.querySelector(".jq-blog-cta")); } catch (e) {}
       if (isPost) fetchRelatedPosts();
     }
 
@@ -1689,12 +1737,16 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
       cta.className = "jq-mid-cta";
       cta.innerHTML =
         '<span class="jq-mid-cta-eyebrow">Nästa steg</span>'
-        + '<p class="jq-mid-cta-t">Frågor om <em>din</em> situation?</p>'
+        + '<p class="jq-mid-cta-t">Vilken behandling passar <em>dig</em>?</p>'
+        + '<p class="jq-mid-cta-sub">Sex korta frågor, under en minut. Du får en personlig rekommendation — och 1 000 kr på din första behandling.</p>'
         + '<div class="jq-mid-cta-btns">'
-        + '<a class="jq-mid-cta-btn jq-mid-cta-btn--primary" href="/boka">Boka konsultation</a>'
-        + '<a class="jq-mid-cta-btn jq-mid-cta-btn--secondary" href="tel:+46317135784">031‑713 57 84</a>'
+        + '<a class="jq-mid-cta-btn jq-mid-cta-btn--primary" href="/hitta-din-behandling">Gör quizet · 1 000 kr</a>'
+        + '<a class="jq-mid-cta-btn jq-mid-cta-btn--secondary" href="/boka">Boka konsultation</a>'
         + '</div>';
-      try { insertAfter.parentNode.insertBefore(cta, insertAfter.nextSibling); }
+      try {
+        insertAfter.parentNode.insertBefore(cta, insertAfter.nextSibling);
+        jqPromo("blog_mid_cta", cta);
+      }
       catch(e) { console.error("[JQ.blog] injectMidArticleCta:", e); }
     }
 
