@@ -1983,8 +1983,11 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
         { re: /\b(kemisk peeling)\b/i, url: "/behandling/kemisk-peeling" },
         { re: /\b(tr[åa]dlyft(?:et)?)\b/i, url: "/behandling/tradlyft" },
         // — breda sist —
-        { re: /\b(fillers?)\b/i, url: "/fillers" },
-        { re: /\b(botox)\b/i, url: "/botox" }
+        /* Rättat 2026-08-01: /fillers är en 301 och /botox en tunn
+         * kategorisida utan meta-description. Peka på behandlingssidorna,
+         * som har stad + pris i titeln och nu en riktig beskrivning. */
+        { re: /\b(fillers?)\b/i, url: "/behandling/fillers-goteborg-guide" },
+        { re: /\b(botox)\b/i, url: "/behandling/botox" }
       ];
       var linked = {};
       treatments.forEach(function(t) { linked[t.url] = false; });
