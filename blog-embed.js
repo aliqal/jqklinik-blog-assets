@@ -1936,14 +1936,55 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
     function injectKeywordLinks() {
       var contentRoot = findContentRoot();
       if (!contentRoot) return;
+      /* KANONISK LÄNKKARTA (2026-08-01).
+       *
+       * Listan var sju handplockade ord. Analysen av hela sökordsbasen visade
+       * att 236 av 433 ord med >=15 visningar splittras på tre eller fler egna
+       * sidor — 14 271 av 21 528 visningar, alltså två tredjedelar av all
+       * sökvolym. Ingen sida samlar nog signal för att nå topp 10.
+       *
+       * Varje behandling pekar nu på EN kanonisk sida. Bloggen är sajtens
+       * starkaste segment (position 15,1 mot behandlingssidornas 25,3) och
+       * länkar härifrån koncentrerar den styrkan dit den ska.
+       *
+       * Ordningen spelar roll: mer specifika uttryck står först, annars
+       * fångar "botox" allt innan "masseter botox" hinner matcha. */
       var treatments = [
-        { re: /\b(botox)\b/i, url: "/botox" },
-        { re: /\b(fillers?)\b/i, url: "/fillers" },
-        { re: /\b(tr[åa]dlyft(?:et)?)\b/i, url: "/tradlyft" },
-        { re: /\b(kemisk peeling)\b/i, url: "/behandling/kemisk-peeling" },
-        { re: /\b(profhilo)\b/i, url: "/behandling/profhilo" },
+        // — specifika först —
+        { re: /\b(masseter[- ]botox|botox[- ]masseter)\b/i, url: "/behandling/masseter-botox-goteborg" },
+        { re: /\b(botox\s+ögonbrynslyft|ögonbrynslyft\s+botox)\b/i, url: "/behandling/botox-ogonbrynslyft" },
+        { re: /\b(botox\s+kråksparkar|kråksparkar)\b/i, url: "/behandling/botox-kraksparkar" },
+        { re: /\b(gummy\s+smile)\b/i, url: "/behandling/botox-gummy-smile" },
+        { re: /\b(svettbehandling|hyperhidros)\b/i, url: "/behandling/botox-svettbehandling" },
+        { re: /\b(tear\s+trough)\b/i, url: "/behandling/filler-tear-trough" },
+        { re: /\b(näskorrigering)\b/i, url: "/behandling/filler-naskorrigering" },
+        { re: /\b(käklinje|jawline)\b/i, url: "/behandling/filler-kaklinje" },
+        { re: /\b(kindben)\b/i, url: "/behandling/filler-kindben" },
+        { re: /\b(nasolabial\w*)\b/i, url: "/behandling/filler-nasolabialveck" },
+        { re: /\b(tinningar)\b/i, url: "/behandling/filler-tinningar" },
+        { re: /\b(hakfiller|filler\s+i\s+hakan)\b/i, url: "/behandling/filler-haka" },
+        { re: /\b(läppförstoring|läppfiller|läpp[- ]filler|fillers?\s+läppar)\b/i, url: "/behandling/filler-lappar" },
+        { re: /\b(profhilo\s+structura)\b/i, url: "/behandling/profhilo-structura" },
+        { re: /\b(skinbooster\w*)\b/i, url: "/behandling/skinbooster" },
+        { re: /\b(polynukleotid\w*|nucleofill|polyphil)\b/i, url: "/behandling/polynukleotider" },
+        { re: /\b(rainbow\s+threads)\b/i, url: "/behandling/rainbow-threads" },
+        { re: /\b(ultra\s*v\s*pdo)\b/i, url: "/behandling/ultra-v-pdo" },
+        { re: /\b(hair\s*filler|hårfiller)\b/i, url: "/behandling/hair-filler" },
+        { re: /\b(full\s*face)\b/i, url: "/behandling/fullface-holistisk-strategi" },
+        { re: /\b(ansiktslyft utan kirurgi)\b/i, url: "/behandling/ansiktslyft-utan-kirurgi-goteborg" },
+        { re: /\b(biorepeel)\b/i, url: "/behandling/biorepeel" },
+        { re: /\b(prx[- ]?t33)\b/i, url: "/behandling/prx-t33" },
+        { re: /\b(ejal\s*40)\b/i, url: "/behandling/ejal-40" },
+        { re: /\b(revok\s*50)\b/i, url: "/behandling/revok50" },
+        { re: /\b(hyalase)\b/i, url: "/behandling/hyalase" },
+        { re: /\b(sculptra)\b/i, url: "/behandling/sculptra" },
         { re: /\b(sunekos)\b/i, url: "/behandling/sunekos" },
-        { re: /\b(microneedling)\b/i, url: "/behandlingar/hudkvalitet" }
+        { re: /\b(profhilo)\b/i, url: "/behandling/profhilo" },
+        { re: /\b(kemisk peeling)\b/i, url: "/behandling/kemisk-peeling" },
+        { re: /\b(tr[åa]dlyft(?:et)?)\b/i, url: "/behandling/tradlyft" },
+        // — breda sist —
+        { re: /\b(fillers?)\b/i, url: "/fillers" },
+        { re: /\b(botox)\b/i, url: "/botox" }
       ];
       var linked = {};
       treatments.forEach(function(t) { linked[t.url] = false; });
