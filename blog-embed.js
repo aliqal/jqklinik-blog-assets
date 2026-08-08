@@ -171,6 +171,56 @@ html body #jq-pop-backdrop {
 #jq-blog-rail li.is-active .n { color: var(--jqb-ink); }
 @media (max-width: 1180px) { #jq-blog-rail { display: none; } }
 
+/* === INNEHÅLLSFÖRTECKNING (i brödtexten — syns på alla enheter) ======= */
+.jq-toc {
+  max-width: 720px; margin: 30px auto 34px; padding: 20px 22px 18px;
+  background: var(--jqb-cream);
+  border: 1px solid var(--jqb-line); border-radius: 4px;
+  font-family: var(--jqb-sans);
+}
+.jq-toc-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; width: 100%;
+  background: none; border: 0; padding: 0; margin: 0;
+  font: inherit; text-align: left; cursor: pointer;
+  color: var(--jqb-stone);
+  font-size: 10px; letter-spacing: .24em; text-transform: uppercase;
+}
+.jq-toc-head .jq-toc-caret {
+  flex: 0 0 auto; width: 9px; height: 9px;
+  border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg) translate(-2px, -2px);
+  transition: transform .3s var(--jqb-ease);
+}
+.jq-toc[data-open="false"] .jq-toc-caret { transform: rotate(-45deg) translate(-1px, 1px); }
+.jq-toc[data-open="false"] .jq-toc-list { display: none; }
+.jq-toc-list {
+  list-style: none; margin: 16px 0 0; padding: 0;
+  counter-reset: jqtoc;
+}
+.jq-toc-list li { margin: 0; counter-increment: jqtoc; }
+.jq-toc-list li + li { border-top: 1px solid var(--jqb-line); }
+.jq-toc-list a {
+  display: flex; align-items: baseline; gap: 12px;
+  padding: 11px 2px; text-decoration: none;
+  color: var(--jqb-text); font-size: 15px; line-height: 1.45;
+  transition: color .2s var(--jqb-ease);
+}
+.jq-toc-list a:hover { color: var(--jqb-accent); }
+.jq-toc-list a::before {
+  content: counter(jqtoc, decimal-leading-zero);
+  flex: 0 0 20px; color: var(--jqb-stone);
+  font-size: 10px; letter-spacing: .1em;
+  font-feature-settings: "tnum" 1;
+}
+.jq-toc-list li.jq-lvl3 a { padding-left: 20px; font-size: 14px; color: var(--jqb-stone); }
+@media (max-width: 720px) {
+  .jq-toc { margin: 24px 16px 28px; padding: 16px 18px 14px; }
+  .jq-toc-list a { padding: 13px 2px; font-size: 15.5px; }
+}
+/* Ankare hamnar inte under den fasta headern */
+.jq-anchor-offset { scroll-margin-top: 96px; }
+
 /* === BACK-LINK (Tillbaka till bloggen) — injectas ovanför post-title === */
 .jq-blog-back-wrap {
   max-width: 720px; margin: 0 auto;
@@ -1518,6 +1568,7 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
             try { injectEyebrows(); } catch(e) {}
             try { injectMidArticleCta(); } catch(e) {}
             try { injectKeywordLinks(); } catch(e) {}
+            try { buildToc(); } catch(e) {}
             // Re-injection watcher: Wix re-renderar och tar bort våra element.
             // Kollar var 1s i 30s + MutationObserver för instant re-inject.
             try {
@@ -1526,6 +1577,7 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
                 watchAttempts++;
                 try { injectEyebrows(); } catch(e) {}
                 try { injectMidArticleCta(); } catch(e) {}
+                try { buildToc(); } catch(e) {}
                 if (watchAttempts >= 30) clearInterval(watchT);
               }, 1000);
               var moPost = new MutationObserver(function() {
@@ -1541,55 +1593,183 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
         }, 600);
       }
 
-      // Chapter rail — bara på post-page
+    }
+
+    // === Innehållsförteckning ========================================= //
+    // Ersätter den gamla "chapter rail" som kördes synkront i init() innan
+    // Wix hunnit rendera artikeln — den hittade noll H2 och gav upp varje
+    // gång, på alla enheter. Den här körs ur retry-loopen när innehållet
+    // faktiskt finns, och lägger förteckningen I brödtexten så att den
+    // syns på mobil också (90 % av trafiken). Desktop-railen behålls.
+    var TOC_MIN = 3; // färre rubriker än så — artikeln behöver ingen
+
+    function tocSlug(text, i) {
+      var s = String(text || "").toLowerCase()
+        .replace(/[åä]/g, "a").replace(/ö/g, "o").replace(/é/g, "e")
+        .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 48);
+      return s ? s : "avsnitt-" + (i + 1);
+    }
+
+    function tocRubriker() {
+      var root = findContentRoot();
+      if (!root) return [];
+      return Array.prototype.filter.call(
+        root.querySelectorAll("h2, h3"),
+        function (h) {
+          if (!(h.textContent || "").trim()) return false;
+          // Våra egna injicerade sektioner är inte artikelavsnitt.
+          return !h.closest(
+            "#jq-blog-extra, .jq-blog-why, .jq-blog-cta-sec, " +
+            ".jq-blog-related-sec, .jq-mid-cta, jq-header, jq-footer"
+          );
+        }
+      );
+    }
+
+    function buildToc() {
       if (!isPost) return;
+      var rubriker = tocRubriker();
+      if (rubriker.length < TOC_MIN) return;
 
-      // Hitta H2:s i post-content. Wix använder olika wrappers — vi söker brett.
-      const contentRoot =
-        findContentRoot();
-      const h2s = Array.from(contentRoot.querySelectorAll("h2"));
-      if (h2s.length < 3) return; // för få — skippa rail
+      // Redan byggd med samma rubriker? Rör inte.
+      var fanns = document.getElementById("jq-toc");
+      if (fanns && fanns.dataset.antal === String(rubriker.length)) return;
+      if (fanns) fanns.remove();
 
-      // Bygg rail
-      let rail = document.getElementById("jq-blog-rail");
+      // Ge varje rubrik ett beskrivande ankare. Wix sätter egna id:n
+      // ("viewer-h-15") som är positionsberoende och säger ingenting —
+      // Google vill ha ord i fragmentet för hopplänkarna i SERP:en. Det
+      // gamla id:t behålls på en osynlig span så inget som pekar dit dör.
+      var poster = rubriker.map(function (h, i) {
+        var slug = tocSlug(h.textContent, i);
+        if (h.id !== slug) {
+          if (h.id && !document.getElementById(h.id + "-legacy")) {
+            var kvar = document.createElement("span");
+            kvar.id = h.id;
+            kvar.setAttribute("aria-hidden", "true");
+            kvar.style.cssText = "display:block;height:0;overflow:hidden";
+            if (h.parentNode) h.parentNode.insertBefore(kvar, h);
+          }
+          h.id = slug;
+        }
+        h.classList.add("jq-anchor-offset");
+        return { h: h, id: slug, titel: (h.textContent || "").trim(), niva: h.tagName === "H3" ? 3 : 2 };
+      });
+
+      // Boxen
+      var box = document.createElement("nav");
+      box.id = "jq-toc";
+      box.className = "jq-toc";
+      box.dataset.antal = String(rubriker.length);
+      box.dataset.open = window.innerWidth < 720 ? "false" : "true";
+      box.setAttribute("aria-label", "Innehåll i artikeln");
+
+      var knappId = "jq-toc-knapp", listId = "jq-toc-lista";
+      var html = '<button type="button" class="jq-toc-head" id="' + knappId
+        + '" aria-expanded="' + (box.dataset.open === "true") + '" aria-controls="' + listId + '">'
+        + '<span>Innehåll</span><span class="jq-toc-caret" aria-hidden="true"></span></button>'
+        + '<ol class="jq-toc-list" id="' + listId + '">';
+      poster.forEach(function (p) {
+        html += '<li' + (p.niva === 3 ? ' class="jq-lvl3"' : '') + '>'
+          + '<a href="#' + p.id + '">' + escapeHtml(p.titel) + "</a></li>";
+      });
+      box.innerHTML = html + "</ol>";
+
+      // Placera efter ingressen, före första rubriken.
+      var forsta = poster[0].h;
+      var ankare = forsta;
+      // Hoppa upp till den nod som är direkt barn till content-roten,
+      // annars hamnar boxen inuti en Wix-wrapper med egen bredd.
+      var root = findContentRoot();
+      while (ankare && ankare.parentNode && ankare.parentNode !== root) {
+        ankare = ankare.parentNode;
+      }
+      if (ankare && ankare.parentNode) ankare.parentNode.insertBefore(box, ankare);
+      else forsta.parentNode.insertBefore(box, forsta);
+
+      // Fäll ihop/ut
+      var knapp = box.querySelector(".jq-toc-head");
+      knapp.addEventListener("click", function () {
+        var open = box.dataset.open !== "true";
+        box.dataset.open = open ? "true" : "false";
+        knapp.setAttribute("aria-expanded", String(open));
+      });
+
+      // Mjuk scroll med plats för den fasta headern.
+      box.addEventListener("click", function (e) {
+        var a = e.target.closest("a[href^='#']");
+        if (!a) return;
+        var mal = document.getElementById(a.getAttribute("href").slice(1));
+        if (!mal) return;
+        e.preventDefault();
+        var y = mal.getBoundingClientRect().top + window.scrollY - 88;
+        window.scrollTo({ top: y, behavior: "smooth" });
+        if (history.replaceState) history.replaceState(null, "", a.getAttribute("href"));
+      });
+
+      byggTocSchema(poster);
+      byggRail(poster);
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"]/g, function (c) {
+        return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+      });
+    }
+
+    // ItemList med absoluta fragment-URL:er. Det är så Google får veta
+    // vilka avsnitt sidan har och kan visa hopplänkar under träffen.
+    function byggTocSchema(poster) {
+      var gammal = document.getElementById("jq-toc-schema");
+      if (gammal) gammal.remove();
+      var bas = location.origin + location.pathname;
+      var s = document.createElement("script");
+      s.type = "application/ld+json";
+      s.id = "jq-toc-schema";
+      s.textContent = JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "ItemList",
+        name: "Innehåll i artikeln",
+        itemListOrder: "https://schema.org/ItemListOrderAscending",
+        numberOfItems: poster.length,
+        itemListElement: poster.map(function (p, i) {
+          return { "@type": "ListItem", position: i + 1, name: p.titel, url: bas + "#" + p.id };
+        }),
+      });
+      document.head.appendChild(s);
+    }
+
+    // Desktop-railen — samma avsnitt, fast i marginalen.
+    function byggRail(poster) {
+      var rail = document.getElementById("jq-blog-rail");
       if (rail) rail.remove();
       rail = document.createElement("aside");
       rail.id = "jq-blog-rail";
       rail.setAttribute("aria-label", "I den här artikeln");
-      let inner = '<div class="eb">I artikeln</div><ol>';
-      const items = [];
-      h2s.forEach((h, i) => {
-        if (!h.id) {
-          const slug = (h.textContent || "").toLowerCase()
-            .replace(/[åä]/g, "a").replace(/ö/g, "o")
-            .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40);
-          h.id = "sec-" + i + "-" + slug;
-        }
-        inner += '<li><a href="#' + h.id + '"><span class="n">'
-          + String(i + 1).padStart(2, "0")
-          + '</span><span class="t">' + (h.textContent || "") + '</span></a></li>';
+      var inner = '<div class="eb">I artikeln</div><ol>';
+      poster.forEach(function (p, i) {
+        inner += '<li><a href="#' + p.id + '"><span class="n">'
+          + String(i + 1).padStart(2, "0") + '</span><span class="t">'
+          + escapeHtml(p.titel) + "</span></a></li>";
       });
-      inner += "</ol>";
-      rail.innerHTML = inner;
+      rail.innerHTML = inner + "</ol>";
       document.body.appendChild(rail);
 
-      // Cache liElements + offsets
-      const liNodes = rail.querySelectorAll("li");
-      h2s.forEach((h, i) => items.push({ h, li: liNodes[i] }));
+      var liNoder = rail.querySelectorAll("li");
+      var items = poster.map(function (p, i) { return { h: p.h, li: liNoder[i] }; });
 
-      // getBoundingClientRect ger document-relativ position oavsett positioned
-      // ancestors (offsetTop fastnade på sista item när Wix wraps content i
-      // position:relative-containers).
-      function highlight() {
-        let active = null;
-        items.forEach((it) => {
-          const top = it.h.getBoundingClientRect().top;
-          if (top <= 140) active = it;
+      // getBoundingClientRect ger document-relativ position oavsett
+      // positioned ancestors (offsetTop fastnade på sista item när Wix
+      // wrappar content i position:relative-containers).
+      function markera() {
+        var aktiv = null;
+        items.forEach(function (it) {
+          if (it.h.getBoundingClientRect().top <= 140) aktiv = it;
         });
-        items.forEach((it) => it.li.classList.toggle("is-active", it === active));
+        items.forEach(function (it) { it.li.classList.toggle("is-active", it === aktiv); });
       }
-      window.addEventListener("scroll", highlight, { passive: true });
-      highlight();
+      window.addEventListener("scroll", markera, { passive: true });
+      markera();
     }
 
     // === Götadental-matching extra-sektioner ========================== //
