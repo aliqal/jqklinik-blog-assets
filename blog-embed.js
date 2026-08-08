@@ -1613,17 +1613,25 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
     function tocRubriker() {
       var root = findContentRoot();
       if (!root) return [];
+      // Allt vi själva injicerar ligger efter artikeln. Att bara matcha på
+      // klass räcker inte: "Relaterade inlägg" hämtas via RSS och dyker upp
+      // efter att listan byggts, varpå omkörningen svalde "Senaste inlägg"
+      // som om det vore ett avsnitt. Vi kapar på dokumentordning i stället.
+      var slut = document.getElementById("jq-blog-extra")
+        || document.getElementById("jq-blog-related-shell");
       return Array.prototype.filter.call(
         root.querySelectorAll("h2, h3"),
         function (h) {
           if (!(h.textContent || "").trim()) return false;
-          // Våra egna injicerade sektioner är inte artikelavsnitt.
-          return !h.closest(
-            "#jq-blog-extra, .jq-blog-why, .jq-blog-cta-sec, " +
-            ".jq-blog-related-sec, .jq-mid-cta, jq-header, jq-footer"
-          );
+          if (h.closest(
+            "#jq-blog-extra, #jq-blog-related-shell, .jq-blog-why, " +
+            ".jq-blog-cta-sec, .jq-blog-related-sec, .jq-mid-cta, " +
+            "jq-header, jq-footer, #jq-toc"
+          )) return false;
+          if (slut && (h.compareDocumentPosition(slut) & Node.DOCUMENT_POSITION_PRECEDING)) return false;
+          return true;
         }
-      );
+      ).slice(0, 12);
     }
 
     function buildToc() {
