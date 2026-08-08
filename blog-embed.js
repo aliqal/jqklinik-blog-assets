@@ -205,6 +205,8 @@ html body #jq-pop-backdrop {
   padding: 11px 2px; text-decoration: none;
   color: var(--jqb-text); font-size: 15px; line-height: 1.45;
   transition: color .2s var(--jqb-ease);
+  /* Wix brödtext sätter kursiv serif på allt i Ricos-blocket */
+  font-family: var(--jqb-sans); font-style: normal; font-weight: 400;
 }
 .jq-toc-list a:hover { color: var(--jqb-accent); }
 .jq-toc-list a::before {
@@ -1731,7 +1733,9 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
       });
 
       byggTocSchema(poster);
-      byggRail(poster);
+      // Ingen sido-rail: den skulle ge desktop två identiska länklistor.
+      var gammalRail = document.getElementById("jq-blog-rail");
+      if (gammalRail) gammalRail.remove();
     }
 
     function escapeHtml(s) {
@@ -1760,39 +1764,6 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
         }),
       });
       document.head.appendChild(s);
-    }
-
-    // Desktop-railen — samma avsnitt, fast i marginalen.
-    function byggRail(poster) {
-      var rail = document.getElementById("jq-blog-rail");
-      if (rail) rail.remove();
-      rail = document.createElement("aside");
-      rail.id = "jq-blog-rail";
-      rail.setAttribute("aria-label", "I den här artikeln");
-      var inner = '<div class="eb">I artikeln</div><ol>';
-      poster.forEach(function (p, i) {
-        inner += '<li><a href="#' + p.id + '"><span class="n">'
-          + String(i + 1).padStart(2, "0") + '</span><span class="t">'
-          + escapeHtml(p.titel) + "</span></a></li>";
-      });
-      rail.innerHTML = inner + "</ol>";
-      document.body.appendChild(rail);
-
-      var liNoder = rail.querySelectorAll("li");
-      var items = poster.map(function (p, i) { return { h: p.h, li: liNoder[i] }; });
-
-      // getBoundingClientRect ger document-relativ position oavsett
-      // positioned ancestors (offsetTop fastnade på sista item när Wix
-      // wrappar content i position:relative-containers).
-      function markera() {
-        var aktiv = null;
-        items.forEach(function (it) {
-          if (it.h.getBoundingClientRect().top <= 140) aktiv = it;
-        });
-        items.forEach(function (it) { it.li.classList.toggle("is-active", it === aktiv); });
-      }
-      window.addEventListener("scroll", markera, { passive: true });
-      markera();
     }
 
     // === Götadental-matching extra-sektioner ========================== //
