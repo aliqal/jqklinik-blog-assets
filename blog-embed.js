@@ -1610,8 +1610,19 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
       return s ? s : "avsnitt-" + (i + 1);
     }
 
+    // findContentRoot() faller tillbaka på [data-hook='post-page'], som
+    // rymmer både artikeln och Wix egna widgets. För förteckningen vill vi
+    // ha själva brödtexten — Ricos-blocken — och bara den.
+    function tocRoot() {
+      var rcv = document.querySelector("[data-hook^='rcv-block']");
+      if (rcv && rcv.parentElement && rcv.parentElement.querySelectorAll("h2, h3").length) {
+        return rcv.parentElement;
+      }
+      return findContentRoot();
+    }
+
     function tocRubriker() {
-      var root = findContentRoot();
+      var root = tocRoot();
       if (!root) return [];
       // Allt vi själva injicerar ligger efter artikeln. Att bara matcha på
       // klass räcker inte: "Relaterade inlägg" hämtas via RSS och dyker upp
@@ -1623,9 +1634,13 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
         root.querySelectorAll("h2, h3"),
         function (h) {
           if (!(h.textContent || "").trim()) return false;
+          // Wix egen "Senaste inlägg"-widget ligger FÖRE våra sektioner
+          // inuti post-page, så dokumentordnings-kapet nedan missar den.
           if (h.closest(
             "#jq-blog-extra, #jq-blog-related-shell, .jq-blog-why, " +
             ".jq-blog-cta-sec, .jq-blog-related-sec, .jq-mid-cta, " +
+            "[data-hook='recent-posts'], [data-hook='post-footer'], " +
+            "[data-hook='related-posts'], [data-hook='comments'], " +
             "jq-header, jq-footer, #jq-toc"
           )) return false;
           if (slut && (h.compareDocumentPosition(slut) & Node.DOCUMENT_POSITION_PRECEDING)) return false;
@@ -1688,7 +1703,7 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
       var ankare = forsta;
       // Hoppa upp till den nod som är direkt barn till content-roten,
       // annars hamnar boxen inuti en Wix-wrapper med egen bredd.
-      var root = findContentRoot();
+      var root = tocRoot();
       while (ankare && ankare.parentNode && ankare.parentNode !== root) {
         ankare = ankare.parentNode;
       }
