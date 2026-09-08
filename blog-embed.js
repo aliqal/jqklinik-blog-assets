@@ -646,35 +646,94 @@ html body #jq-archive {
 }
 
 /* === MID-ARTIKEL CTA (injectas efter 2:a H2) ======================== */
+/* Kort i varm sand med guldhairline i stället för två nakna linjer.
+ * Wix [data-hook="post-content"] p-regler vinner annars på specificitet och
+ * gjorde underrubriken serif/kursiv — därför !important på typografin här. */
 .jq-mid-cta {
-  border-top: 1px solid var(--jqb-line);
-  border-bottom: 1px solid var(--jqb-line);
-  padding: clamp(24px, 3.5vw, 36px) 0;
-  margin: clamp(32px, 5vw, 52px) 0;
+  position: relative; isolation: isolate;
+  border: 1px solid #E2D6BC; border-radius: 16px;
+  background: linear-gradient(135deg, #FCFAF5 0%, #F4ECDC 100%);
+  padding: clamp(24px, 4vw, 36px);
+  margin: clamp(36px, 6vw, 60px) 0;
+  box-shadow: 0 22px 44px -34px rgba(124, 95, 55, .55);
+  overflow: hidden;
 }
+.jq-mid-cta::before {
+  content: ""; position: absolute; inset: 0 0 auto 0; height: 3px;
+  background: linear-gradient(90deg, #C9A468 0%, #E4D3AC 55%, transparent 100%);
+}
+/* Porträttet gör kortet mänskligt och backar löftet om specialist.
+ * Cirkel i ALLA lägen: bloggens textkolumn är bara ~470 px, så en stående
+ * bild vid sidan klämmer ihop texten till en teckenremsa (verifierat i
+ * headless 1280 px). <span> och inte <figure>/<img> naket — Wix
+ * [data-hook="post-content"]-regler tvingar annars width:100% på båda. */
+.jq-mid-cta .jq-mid-cta-fig {
+  display: block !important;
+  width: 66px !important; height: 66px !important;
+  border-radius: 50% !important; overflow: hidden !important;
+  margin: 0 0 16px !important; padding: 0 !important;
+  border: 1px solid #E2D6BC; background: #EFE6D4;
+}
+.jq-mid-cta .jq-mid-cta-fig img {
+  display: block !important; width: 100% !important; height: 100% !important;
+  max-width: none !important; margin: 0 !important; border-radius: 0 !important;
+  object-fit: cover; object-position: 50% 12%;
+}
+
 .jq-mid-cta-eyebrow {
-  display: block; font-family: var(--jqb-sans); font-size: 10px;
-  letter-spacing: .26em; text-transform: uppercase; color: var(--jqb-stone);
-  margin-bottom: 12px;
+  display: block; font-family: var(--jqb-sans) !important; font-size: 10px !important;
+  letter-spacing: .26em; text-transform: uppercase; color: #8A6A32 !important;
+  font-style: normal !important; font-weight: 500 !important; margin-bottom: 12px;
 }
 .jq-mid-cta-t {
-  font-family: var(--jqb-serif); font-weight: 400;
-  font-size: clamp(1.2rem, 1.8vw, 1.55rem); line-height: 1.2;
-  color: var(--jqb-ink); margin: 0 0 18px;
+  font-family: var(--jqb-serif) !important; font-weight: 400 !important;
+  font-size: clamp(1.35rem, 2.1vw, 1.75rem) !important; line-height: 1.18 !important;
+  color: var(--jqb-ink) !important; margin: 0 0 10px !important; font-style: normal !important;
 }
-.jq-mid-cta-t em { font-style: italic; color: var(--jqb-stone); font-weight: 300; }
-.jq-mid-cta-btns { display: flex; gap: 12px; flex-wrap: wrap; }
-.jq-mid-cta-btn {
+.jq-mid-cta-t em { font-style: italic; color: #8A6A32; font-weight: 300; }
+.jq-mid-cta-sub {
+  font-family: var(--jqb-sans) !important; font-size: 14.5px !important;
+  line-height: 1.6 !important; font-style: normal !important;
+  color: #5F5A50 !important; margin: 0 0 16px !important; max-width: 46ch;
+}
+
+/* Meta som chips i stället för punkt-separerad rad: separatorn hamnade först
+ * på ny rad vid radbrytning på mobil. Kursiv nollställs explicit — Wix
+ * post-content lutar annars all injicerad text. */
+.jq-mid-cta-meta {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  margin: 0 0 22px;
+}
+.jq-mid-cta-meta span {
   display: inline-flex; align-items: center;
-  padding: 11px 22px; border-radius: 999px;
-  font-family: var(--jqb-sans); font-size: 11px; font-weight: 500;
-  letter-spacing: .16em; text-transform: uppercase; text-decoration: none;
-  transition: background .25s var(--jqb-ease), color .25s var(--jqb-ease), border-color .25s var(--jqb-ease);
+  padding: 5px 12px; border-radius: 999px;
+  border: 1px solid #E2D6BC; background: rgba(255, 253, 248, .7);
+  font-family: var(--jqb-sans) !important; font-size: 10.5px !important;
+  font-style: normal !important; font-weight: 500;
+  letter-spacing: .12em; text-transform: uppercase; color: #8A6A32 !important;
+  line-height: 1.4;
 }
-.jq-mid-cta-btn--primary { background: var(--jqb-ink); color: var(--jqb-cream); }
-.jq-mid-cta-btn--primary:hover { background: #000; }
-.jq-mid-cta-btn--secondary { background: transparent; color: var(--jqb-ink); border: 1px solid var(--jqb-line); }
-.jq-mid-cta-btn--secondary:hover { border-color: var(--jqb-ink); }
+.jq-mid-cta-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+.jq-mid-cta-btn {
+  display: inline-flex; align-items: center; gap: 9px;
+  padding: 13px 26px; border-radius: 999px;
+  font-family: var(--jqb-sans) !important; font-size: 11px !important;
+  font-weight: 600; font-style: normal !important;
+  letter-spacing: .14em; text-transform: uppercase; text-decoration: none !important;
+  border: 1px solid transparent; white-space: nowrap;
+  transition: background .25s var(--jqb-ease), color .25s var(--jqb-ease),
+              border-color .25s var(--jqb-ease), transform .25s var(--jqb-ease),
+              box-shadow .25s var(--jqb-ease);
+}
+.jq-mid-cta-btn--primary {
+  background: var(--jqb-ink); color: #F7F2E6;
+  box-shadow: 0 12px 24px -16px rgba(21, 23, 27, .8);
+}
+.jq-mid-cta-btn--primary:hover { background: #000; transform: translateY(-1px); }
+.jq-mid-cta-btn--primary .jq-arw { transition: transform .25s var(--jqb-ease); }
+.jq-mid-cta-btn--primary:hover .jq-arw { transform: translateX(3px); }
+.jq-mid-cta-btn--secondary { background: transparent; color: #4A4438; border-color: #DBCBAA; }
+.jq-mid-cta-btn--secondary:hover { border-color: #8A6A32; color: var(--jqb-ink); }
 
 /* === INTERNA KEYWORD-LÄNKAR (auto-inject vid första förekomst) ======= */
 .jq-kw-link {
@@ -736,9 +795,26 @@ html body #jq-archive {
   color: var(--jqb-ink-2); margin: 0;
 }
 
-#jq-blog-extra .jq-blog-cta-sec { background: var(--jqb-ink); color: var(--jqb-cream); }
+/* Varm guldglöd uppe till vänster så blocket inte läser som en platt svart
+ * ruta — samma guld (#C9A468) som popupen och mid-CTA:n. */
+#jq-blog-extra .jq-blog-cta-sec {
+  background:
+    radial-gradient(120% 90% at 8% 0%, rgba(201,164,104,.16) 0%, rgba(201,164,104,0) 58%),
+    var(--jqb-ink);
+  color: var(--jqb-cream);
+  border-top: 1px solid rgba(201,164,104,.35);
+}
 #jq-blog-extra .jq-blog-cta { max-width: 820px; margin: 0; text-align: left; }
-#jq-blog-extra .jq-blog-cta .jq-eyebrow { color: rgba(244,241,234,.55); }
+#jq-blog-extra .jq-blog-cta .jq-eyebrow { color: #C9A468; }
+#jq-blog-extra .jq-blog-cta-meta {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px;
+  margin: 0 0 30px; font-family: var(--jqb-sans); font-size: 11px;
+  letter-spacing: .12em; text-transform: uppercase; color: rgba(244,241,234,.6);
+}
+#jq-blog-extra .jq-blog-cta-meta span { display: inline-flex; align-items: center; gap: 8px; }
+#jq-blog-extra .jq-blog-cta-meta span + span::before {
+  content: ""; width: 3px; height: 3px; border-radius: 50%; background: #C9A468;
+}
 #jq-blog-extra .jq-blog-cta-h {
   font-family: var(--jqb-serif); font-weight: 400;
   font-size: clamp(1.8rem, 3.6vw, 2.6rem); line-height: 1.12;
@@ -758,8 +834,14 @@ html body #jq-archive {
   text-decoration: none; border: 1px solid transparent;
   transition: background-color .25s var(--jqb-ease), color .25s var(--jqb-ease), border-color .25s var(--jqb-ease);
 }
-#jq-blog-extra .jq-btn--solid { background: var(--jqb-cream); color: var(--jqb-ink); }
-#jq-blog-extra .jq-btn--solid:hover { background: #fff; }
+/* Guld = quizet (samma signal som popupens knapp), cream = sekundärt. */
+#jq-blog-extra .jq-btn--solid {
+  background: linear-gradient(135deg, #D8B679 0%, #C9A468 100%); color: #1B1710;
+  font-weight: 600; box-shadow: 0 16px 30px -20px rgba(201,164,104,.9);
+}
+#jq-blog-extra .jq-btn--solid:hover { background: #D9B87C; transform: translateY(-1px); }
+#jq-blog-extra .jq-btn--solid .jq-arw { transition: transform .25s var(--jqb-ease); }
+#jq-blog-extra .jq-btn--solid:hover .jq-arw { transform: translateX(3px); }
 #jq-blog-extra .jq-btn--ghost {
   background: transparent; color: var(--jqb-cream); border-color: rgba(244,241,234,.3);
 }
@@ -1766,6 +1848,53 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
       document.head.appendChild(s);
     }
 
+    /* === PROMO-MÄTNING ================================================ //
+     * Samma räknare som popupen och behandlingsbannern (jqSettings/
+     * promo-counters via /_functions/promoEvent) så bloggens CTA:er går att
+     * jämföra apples-to-apples. Utan mätning upptäcktes aldrig att den gamla
+     * blogg-bannern (blog_quiz_banner, byggd i Blogginlagg.tsx 2026-06-23)
+     * hade noll visningar — den komponenten renderas inte på live-/post/*.
+     * View räknas en gång per session, först vid 50 % synlighet. */
+    /* Specialistporträttet (samma bild som Om oss) — Wix-transform till exakt
+     * renderad storlek så den inte drar onödig vikt i bloggen. */
+    var JQ_PORTRAIT = "https://static.wixstatic.com/media/a95528_6718bf09f86943a0983bf7c5a1504875~mv2.png/v1/fill/w_296,h_370,al_c,q_85,enc_auto/a95528_6718bf09f86943a0983bf7c5a1504875~mv2.png";
+
+    function jqPromo(name, el) {
+      if (!el) return;
+      function send(type) {
+        try {
+          fetch("/_functions/promoEvent", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ name: name, type: type }),
+            keepalive: true
+          }).catch(function () {});
+        } catch (e) {}
+        try {
+          if (window.gtag) window.gtag("event", type === "view" ? "view_promotion" : "select_promotion", { promotion_name: name });
+        } catch (e) {}
+      }
+      try {
+        var link = el.querySelector('a[href="/hitta-din-behandling"]');
+        if (link) link.addEventListener("click", function () { send("click"); });
+      } catch (e) {}
+      var key = "jq_promo_" + name;
+      try { if (sessionStorage.getItem(key)) return; } catch (e) {}
+      try {
+        var io = new IntersectionObserver(function (entries) {
+          for (var i = 0; i < entries.length; i++) {
+            if (entries[i].isIntersecting && entries[i].intersectionRatio >= 0.5) {
+              try { sessionStorage.setItem(key, "1"); } catch (e) {}
+              send("view");
+              io.disconnect();
+              break;
+            }
+          }
+        }, { threshold: [0, 0.5] });
+        io.observe(el);
+      } catch (e) {}
+    }
+
     // === Götadental-matching extra-sektioner ========================== //
     function injectExtras() {
       if (document.getElementById("jq-blog-extra")) return;
@@ -1782,11 +1911,12 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
         + '</ol></div></section>';
       const ctaHtml = '<section class="jq-sec jq-blog-cta-sec"><div class="jq-wrap"><div class="jq-blog-cta">'
         + '<span class="jq-eyebrow">Nästa steg</span>'
-        + '<h3 class="jq-blog-cta-h">Frågor om <em>din situation?</em></h3>'
-        + '<p class="jq-blog-cta-lede">Boka en konsultation hos leg. specialisttandläkare med estetik-inriktning. Ingen förskottsbetalning.</p>'
+        + '<h3 class="jq-blog-cta-h">Vilken behandling passar <em>dig?</em></h3>'
+        + '<p class="jq-blog-cta-lede">Svara på sex korta frågor så matchar vi dig med rätt behandling, pris och plan — framtaget av leg. specialisttandläkare med estetik-inriktning.</p>'
+        + '<div class="jq-blog-cta-meta"><span>60 sekunder</span><span>6 frågor</span><span>1 000 kr värdecheck</span></div>'
         + '<div class="jq-blog-cta-btns">'
-        + '<a class="jq-btn jq-btn--solid" href="/boka">Boka konsultation</a>'
-        + '<a class="jq-btn jq-btn--ghost" href="tel:+46317135784">031-713 57 84</a>'
+        + '<a class="jq-btn jq-btn--solid" href="/hitta-din-behandling">Gör quizet<span class="jq-arw" aria-hidden="true">&rarr;</span></a>'
+        + '<a class="jq-btn jq-btn--ghost" href="/boka">Boka konsultation</a>'
         + '</div></div></div></section>';
       const relatedShell = isPost ? '<section class="jq-sec jq-blog-related-sec" id="jq-blog-related-shell"></section>' : '';
 
@@ -1807,6 +1937,8 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
       } catch (e) {
         document.body.appendChild(extra);
       }
+      // Mätningen följer med oavsett var blocket hamnade.
+      try { jqPromo("blog_end_cta", extra.querySelector(".jq-blog-cta")); } catch (e) {}
       if (isPost) fetchRelatedPosts();
     }
 
@@ -1874,13 +2006,21 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
       var cta = document.createElement("div");
       cta.className = "jq-mid-cta";
       cta.innerHTML =
-        '<span class="jq-mid-cta-eyebrow">Nästa steg</span>'
-        + '<p class="jq-mid-cta-t">Frågor om <em>din</em> situation?</p>'
+        '<div class="jq-mid-cta-row">'
+        + '<span class="jq-mid-cta-fig"><img src="' + JQ_PORTRAIT + '" alt="Jilah Qaljaee, leg. specialisttandläkare" loading="lazy" decoding="async" width="296" height="370"></span>'
+        + '<div class="jq-mid-cta-body">'
+        + '<span class="jq-mid-cta-eyebrow">Hitta din behandling</span>'
+        + '<p class="jq-mid-cta-t">Vilken behandling passar <em>dig</em>?</p>'
+        + '<p class="jq-mid-cta-sub">Svara på sex korta frågor så matchar vi dig med rätt behandling, pris och plan — framtaget av Jilah Qaljaee, leg. specialisttandläkare.</p>'
+        + '<div class="jq-mid-cta-meta"><span>60 sekunder</span><span>6 frågor</span><span>1 000 kr värdecheck</span></div>'
         + '<div class="jq-mid-cta-btns">'
-        + '<a class="jq-mid-cta-btn jq-mid-cta-btn--primary" href="/boka">Boka konsultation</a>'
-        + '<a class="jq-mid-cta-btn jq-mid-cta-btn--secondary" href="tel:+46317135784">031‑713 57 84</a>'
-        + '</div>';
-      try { insertAfter.parentNode.insertBefore(cta, insertAfter.nextSibling); }
+        + '<a class="jq-mid-cta-btn jq-mid-cta-btn--primary" href="/hitta-din-behandling">Gör quizet<span class="jq-arw" aria-hidden="true">&rarr;</span></a>'
+        + '<a class="jq-mid-cta-btn jq-mid-cta-btn--secondary" href="/boka">Boka konsultation</a>'
+        + '</div></div></div>';
+      try {
+        insertAfter.parentNode.insertBefore(cta, insertAfter.nextSibling);
+        jqPromo("blog_mid_cta", cta);
+      }
       catch(e) { console.error("[JQ.blog] injectMidArticleCta:", e); }
     }
 
@@ -1983,14 +2123,58 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
     function injectKeywordLinks() {
       var contentRoot = findContentRoot();
       if (!contentRoot) return;
+      /* KANONISK LÄNKKARTA (2026-08-01).
+       *
+       * Listan var sju handplockade ord. Analysen av hela sökordsbasen visade
+       * att 236 av 433 ord med >=15 visningar splittras på tre eller fler egna
+       * sidor — 14 271 av 21 528 visningar, alltså två tredjedelar av all
+       * sökvolym. Ingen sida samlar nog signal för att nå topp 10.
+       *
+       * Varje behandling pekar nu på EN kanonisk sida. Bloggen är sajtens
+       * starkaste segment (position 15,1 mot behandlingssidornas 25,3) och
+       * länkar härifrån koncentrerar den styrkan dit den ska.
+       *
+       * Ordningen spelar roll: mer specifika uttryck står först, annars
+       * fångar "botox" allt innan "masseter botox" hinner matcha. */
       var treatments = [
-        { re: /\b(botox)\b/i, url: "/botox" },
-        { re: /\b(fillers?)\b/i, url: "/fillers" },
-        { re: /\b(tr[åa]dlyft(?:et)?)\b/i, url: "/tradlyft" },
-        { re: /\b(kemisk peeling)\b/i, url: "/behandling/kemisk-peeling" },
-        { re: /\b(profhilo)\b/i, url: "/behandling/profhilo" },
+        // — specifika först —
+        { re: /\b(masseter[- ]botox|botox[- ]masseter)\b/i, url: "/behandling/masseter-botox-goteborg" },
+        { re: /\b(botox\s+ögonbrynslyft|ögonbrynslyft\s+botox)\b/i, url: "/behandling/botox-ogonbrynslyft" },
+        { re: /\b(botox\s+kråksparkar|kråksparkar)\b/i, url: "/behandling/botox-kraksparkar" },
+        { re: /\b(gummy\s+smile)\b/i, url: "/behandling/botox-gummy-smile" },
+        { re: /\b(svettbehandling|hyperhidros)\b/i, url: "/behandling/botox-svettbehandling" },
+        { re: /\b(tear\s+trough)\b/i, url: "/behandling/filler-tear-trough" },
+        { re: /\b(näskorrigering)\b/i, url: "/behandling/filler-naskorrigering" },
+        { re: /\b(käklinje|jawline)\b/i, url: "/behandling/filler-kaklinje" },
+        { re: /\b(kindben)\b/i, url: "/behandling/filler-kindben" },
+        { re: /\b(nasolabial\w*)\b/i, url: "/behandling/filler-nasolabialveck" },
+        { re: /\b(tinningar)\b/i, url: "/behandling/filler-tinningar" },
+        { re: /\b(hakfiller|filler\s+i\s+hakan)\b/i, url: "/behandling/filler-haka" },
+        { re: /\b(läppförstoring|läppfiller|läpp[- ]filler|fillers?\s+läppar)\b/i, url: "/behandling/filler-lappar" },
+        { re: /\b(profhilo\s+structura)\b/i, url: "/behandling/profhilo-structura" },
+        { re: /\b(skinbooster\w*)\b/i, url: "/behandling/skinbooster" },
+        { re: /\b(polynukleotid\w*|nucleofill|polyphil)\b/i, url: "/behandling/polynukleotider" },
+        { re: /\b(rainbow\s+threads)\b/i, url: "/behandling/rainbow-threads" },
+        { re: /\b(ultra\s*v\s*pdo)\b/i, url: "/behandling/ultra-v-pdo" },
+        { re: /\b(hair\s*filler|hårfiller)\b/i, url: "/behandling/hair-filler" },
+        { re: /\b(full\s*face)\b/i, url: "/behandling/fullface-holistisk-strategi" },
+        { re: /\b(ansiktslyft utan kirurgi)\b/i, url: "/behandling/ansiktslyft-utan-kirurgi-goteborg" },
+        { re: /\b(biorepeel)\b/i, url: "/behandling/biorepeel" },
+        { re: /\b(prx[- ]?t33)\b/i, url: "/behandling/prx-t33" },
+        { re: /\b(ejal\s*40)\b/i, url: "/behandling/ejal-40" },
+        { re: /\b(revok\s*50)\b/i, url: "/behandling/revok50" },
+        { re: /\b(hyalase)\b/i, url: "/behandling/hyalase" },
+        { re: /\b(sculptra)\b/i, url: "/behandling/sculptra" },
         { re: /\b(sunekos)\b/i, url: "/behandling/sunekos" },
-        { re: /\b(microneedling)\b/i, url: "/behandlingar/hudkvalitet" }
+        { re: /\b(profhilo)\b/i, url: "/behandling/profhilo" },
+        { re: /\b(kemisk peeling)\b/i, url: "/behandling/kemisk-peeling" },
+        { re: /\b(tr[åa]dlyft(?:et)?)\b/i, url: "/behandling/tradlyft" },
+        // — breda sist —
+        /* Rättat 2026-08-01: /fillers är en 301 och /botox en tunn
+         * kategorisida utan meta-description. Peka på behandlingssidorna,
+         * som har stad + pris i titeln och nu en riktig beskrivning. */
+        { re: /\b(fillers?)\b/i, url: "/behandling/fillers-goteborg-guide" },
+        { re: /\b(botox)\b/i, url: "/behandling/botox" }
       ];
       var linked = {};
       treatments.forEach(function(t) { linked[t.url] = false; });
