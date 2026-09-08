@@ -2124,16 +2124,29 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
        * dokumentet — uppmätt på /post/-sidan står scrollY kvar på 0 medan
        * innehållet ändå rör sig, så en scrollY-tröskel hade aldrig löst ut.
        * Rubrikens position mot vyn är sann oavsett vilket element som rullar. */
+      /* ANKARET MÅSTE VARA ETT ELEMENT SOM FAKTISKT RÖR SIG.
+       *
+       * Två försök gick i samma fälla: sidans första `h1` sitter i en
+       * container som står stilla, och findContentRoot() returnerar ett
+       * omslag som inte heller flyttar sig — båda gav `last: false` medan
+       * texten låg 3 900 px ovanför vyn (uppmätt via window.__jqBar).
+       *
+       * Quiz-CTA:n injicerar vi själva, mitt i texten, och den rör sig med
+       * innehållet. Den ger också rätt regel i sak: före den är quizet
+       * erbjudandet, efter den tar bokningen över. Ett H2 en bit ner i
+       * artikeln är reserv för inlägg utan mid-CTA. */
       var ankare = null;
       function ilast() {
-        /* Mät på TEXTEN, inte på rubriken. Första `h1` på sidan ligger i en
-         * container som inte rör sig med innehållet — dess bottom låg kvar
-         * kring 60 px hur långt ner man än scrollade, så villkoret löste
-         * aldrig ut (uppmätt med window.__jqBar: last stod på false även
-         * 4000 px ner i artikeln). Artikelkroppens överkant rör sig alltid. */
-        if (!ankare) ankare = findContentRoot() || document.querySelector("[data-hook^='rcv-block']");
+        if (!ankare || !ankare.isConnected) {
+          ankare = document.querySelector(".jq-mid-cta");
+          if (!ankare) {
+            var rot = findContentRoot();
+            var h2 = rot ? rot.querySelectorAll("h2") : [];
+            ankare = h2.length > 1 ? h2[1] : h2[0] || null;
+          }
+        }
         if (!ankare) return false;
-        return ankare.getBoundingClientRect().top < -300;
+        return ankare.getBoundingClientRect().bottom < 0;
       }
 
       function uppdatera() {
