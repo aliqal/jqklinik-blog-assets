@@ -2133,9 +2133,13 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
 
       function uppdatera() {
         if (!mobil.matches) { bar.classList.add("jq-visa"); return; }
-        var visa = ilast() && !kakbannerUppe() && !midCtaIVy();
+        var l = ilast(), k = kakbannerUppe(), m = midCtaIVy();
+        var visa = l && !k && !m;
+        /* Diagnos: varför baren är dold syns annars inte utifrån. */
+        try { window.__jqBar = { last: l, kakbanner: k, midIVy: m, visa: visa, tid: Date.now() }; } catch (e) {}
         bar.classList.toggle("jq-visa", visa);
       }
+      try { window.__jqBarStyrd = (window.__jqBarStyrd || 0) + 1; } catch (e) {}
 
       var vantar = false;
       window.addEventListener("scroll", function () {
