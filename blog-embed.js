@@ -1196,7 +1196,7 @@ aside.jq-post-hero-ctas--floating .jq-btn--ghost-dark:hover {
  * något. Nu: vänsterställd bar som lämnar högerhörnet åt Welvo, telefonen som
  * rund ikonknapp, och den glider upp först när artikeln faktiskt läses. */
 @media (max-width: 720px) {
-  aside.jq-post-hero-ctas--floating {
+  html body aside.jq-post-hero-ctas--floating {
     left: 12px !important;
     right: 92px !important;               /* plats åt Welvo-bubblan */
     width: auto !important;
@@ -1209,27 +1209,27 @@ aside.jq-post-hero-ctas--floating .jq-btn--ghost-dark:hover {
     pointer-events: none !important;
     transition: transform .32s cubic-bezier(.22,1,.36,1), opacity .28s ease !important;
   }
-  aside.jq-post-hero-ctas--floating.jq-visa {
+  html body aside.jq-post-hero-ctas--floating.jq-visa {
     transform: translateY(0) !important;
     opacity: 1 !important;
     pointer-events: auto !important;
   }
-  aside.jq-post-hero-ctas--floating .jq-btn--solid {
+  html body aside.jq-post-hero-ctas--floating .jq-btn--solid {
     flex: 1 1 auto !important;
     justify-content: center !important;
     padding: 13px 14px !important;
     font-size: 11.5px !important;
   }
   /* Telefonen: 44 px rund träffyta, numret ersatt av ikon. */
-  aside.jq-post-hero-ctas--floating .jq-btn--ghost-dark {
+  html body aside.jq-post-hero-ctas--floating .jq-btn--ghost-dark {
     flex: 0 0 auto !important;
     width: 44px !important;
     height: 44px !important;
     padding: 0 !important;
     justify-content: center !important;
   }
-  aside.jq-post-hero-ctas--floating .jq-tel-nr { display: none !important; }
-  aside.jq-post-hero-ctas--floating .jq-tel-ikon { display: block !important; }
+  html body aside.jq-post-hero-ctas--floating .jq-tel-nr { display: none !important; }
+  html body aside.jq-post-hero-ctas--floating .jq-tel-ikon { display: block !important; }
 }
 .jq-post-hero-ctas .jq-btn {
   display: inline-flex !important;
@@ -2118,9 +2118,22 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
         return r.top < window.innerHeight * 0.9 && r.bottom > 0;
       }
 
+      /* Har läsaren kommit in i texten?
+       *
+       * MÄT PÅ ETT ELEMENT, INTE PÅ window.scrollY. Wix scrollar inte alltid
+       * dokumentet — uppmätt på /post/-sidan står scrollY kvar på 0 medan
+       * innehållet ändå rör sig, så en scrollY-tröskel hade aldrig löst ut.
+       * Rubrikens position mot vyn är sann oavsett vilket element som rullar. */
+      var rubrik = null;
+      function ilast() {
+        if (!rubrik) rubrik = document.querySelector("[data-hook='post-title'], .post-title, h1");
+        if (!rubrik) return false;
+        return rubrik.getBoundingClientRect().bottom < -80;
+      }
+
       function uppdatera() {
         if (!mobil.matches) { bar.classList.add("jq-visa"); return; }
-        var visa = window.scrollY > 600 && !kakbannerUppe() && !midCtaIVy();
+        var visa = ilast() && !kakbannerUppe() && !midCtaIVy();
         bar.classList.toggle("jq-visa", visa);
       }
 
