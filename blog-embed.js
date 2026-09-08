@@ -2158,7 +2158,7 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
         var w = document.getElementById("_welvo_root");
         var h = 0;
         try { if (w) h = Math.round(w.getBoundingClientRect().height); } catch (e) {}
-        var botten = h > 0 ? h + 18 : 10;
+        var botten = h > 0 ? h + 28 : 10;
         bar.style.setProperty("bottom", "calc(" + botten + "px + env(safe-area-inset-bottom, 0px))", "important");
       }
 
