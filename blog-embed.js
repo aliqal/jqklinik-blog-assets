@@ -1198,7 +1198,7 @@ aside.jq-post-hero-ctas--floating .jq-btn--ghost-dark:hover {
 @media (max-width: 720px) {
   html body aside.jq-post-hero-ctas--floating {
     left: 12px !important;
-    right: 92px !important;               /* plats åt Welvo-bubblan */
+    right: 12px !important;
     width: auto !important;
     max-width: none !important;
     transform: translateY(140%) !important;
@@ -2149,12 +2149,26 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
         return ankare.getBoundingClientRect().bottom < 0;
       }
 
+      /* Welvo-bubblan sitter i höger hörn och är bredare utfälld (230 px) än
+       * hopfälld. Att reservera en fast högermarginal räckte inte — de
+       * överlappade ändå (uppmätt: bar 12–298, Welvo 136–366). Baren läggs
+       * därför OVANFÖR widgeten, med dess faktiska höjd mätt varje gång, så
+       * den följer med ner igen när bubblan fälls ihop. */
+      function undvikWelvo() {
+        var w = document.getElementById("_welvo_root");
+        var h = 0;
+        try { if (w) h = Math.round(w.getBoundingClientRect().height); } catch (e) {}
+        var botten = h > 0 ? h + 18 : 10;
+        bar.style.setProperty("bottom", "calc(" + botten + "px + env(safe-area-inset-bottom, 0px))", "important");
+      }
+
       function uppdatera() {
         if (!mobil.matches) { bar.classList.add("jq-visa"); return; }
         var l = ilast(), k = kakbannerUppe(), m = midCtaIVy();
         var visa = l && !k && !m;
         /* Diagnos: varför baren är dold syns annars inte utifrån. */
         try { window.__jqBar = { last: l, kakbanner: k, midIVy: m, visa: visa, tid: Date.now() }; } catch (e) {}
+        if (visa) undvikWelvo();
         bar.classList.toggle("jq-visa", visa);
       }
       try { window.__jqBarStyrd = (window.__jqBarStyrd || 0) + 1; } catch (e) {}
