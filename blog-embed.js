@@ -2124,11 +2124,16 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
        * dokumentet — uppmätt på /post/-sidan står scrollY kvar på 0 medan
        * innehållet ändå rör sig, så en scrollY-tröskel hade aldrig löst ut.
        * Rubrikens position mot vyn är sann oavsett vilket element som rullar. */
-      var rubrik = null;
+      var ankare = null;
       function ilast() {
-        if (!rubrik) rubrik = document.querySelector("[data-hook='post-title'], .post-title, h1");
-        if (!rubrik) return false;
-        return rubrik.getBoundingClientRect().bottom < -80;
+        /* Mät på TEXTEN, inte på rubriken. Första `h1` på sidan ligger i en
+         * container som inte rör sig med innehållet — dess bottom låg kvar
+         * kring 60 px hur långt ner man än scrollade, så villkoret löste
+         * aldrig ut (uppmätt med window.__jqBar: last stod på false även
+         * 4000 px ner i artikeln). Artikelkroppens överkant rör sig alltid. */
+        if (!ankare) ankare = findContentRoot() || document.querySelector("[data-hook^='rcv-block']");
+        if (!ankare) return false;
+        return ankare.getBoundingClientRect().top < -300;
       }
 
       function uppdatera() {
