@@ -2146,7 +2146,15 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
           }
         }
         if (!ankare) return false;
-        return ankare.getBoundingClientRect().bottom < 0;
+        var r = ankare.getBoundingClientRect();
+        try {
+          window.__jqBarAnkare = {
+            vad: ankare.className || ankare.tagName,
+            botten: Math.round(r.bottom),
+            hojd: Math.round(r.height),
+          };
+        } catch (e) {}
+        return r.bottom < 0;
       }
 
       /* Welvo-bubblan sitter i höger hörn och är bredare utfälld (230 px) än
