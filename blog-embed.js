@@ -1499,8 +1499,28 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
         function walk(el) {
           if (!el || el.nodeType !== 1) return;
           if (el.tagName === 'IFRAME' || INLINE_TAGS[el.tagName]) return;
+          /* ÖVERLAGRINGAR SKA INTE TVINGAS TILL 100 % (Ali 2026-09-08).
+           *
+           * Bredd-forceringen finns för Wix container-divs som sitter fast på
+           * 320 px. Flytande element har inget med den bredden att göra, och
+           * blir förstörda av den: Welvos chattwidget fick sin 28 px-avatar
+           * utdragen till 390 px (en grön ellips) och teaser-bubblan täckte
+           * 26 % av mobilskärmen, ovanpå både kakbannern och quiz-CTA:n.
+           * Bloggens egen flytande CTA-bar drabbades likadant — `left:0`
+           * ovanpå dess `translateX(-50%)` la halva baren utanför vänsterkanten
+           * (uppmätt box x = -195).
+           *
+           * Position läses från inline-stilen, inte via getComputedStyle:
+           * walk() körs över hela trädet och upprepas periodiskt, så ett
+           * layout-anrop per element vore dyrt. Welvo sätter position:fixed
+           * inline; våra egna flytande element fångas på klassnamn. */
+          if (el.id === '_welvo_root') return;
+          var inlinePos = el.style && el.style.position;
+          if (inlinePos === 'fixed' || inlinePos === 'sticky') return;
           if (el.className && typeof el.className === 'string') {
             if (el.className.indexOf('jq-blog-') === 0 || el.className.indexOf(' jq-blog-') !== -1) return;
+            if (el.className.indexOf('welvo') !== -1) return;
+            if (el.className.indexOf('jq-post-hero-ctas') !== -1) return;
             if (el.classList.contains('jq-startsida-popup')) return;
           }
           var disp = el.style.display || '';
