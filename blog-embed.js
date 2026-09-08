@@ -1187,17 +1187,49 @@ aside.jq-post-hero-ctas--floating .jq-btn--ghost-dark:hover {
   background: rgba(26,24,21,0.06) !important;
   border-color: #1a1815 !important;
 }
+.jq-post-hero-ctas--floating .jq-tel-ikon { display: none !important; }
+
+/* MOBIL (Ali 2026-09-08). Baren låg centrerad i nederkant och krockade med
+ * tre saker samtidigt: kakbannern under sig, Welvo-bubblan i höger hörn, och
+ * sitt eget telefonnummer som konkurrerade med bokningsknappen om bredden.
+ * Den syntes dessutom direkt vid landning, alltså innan läsaren hunnit vilja
+ * något. Nu: vänsterställd bar som lämnar högerhörnet åt Welvo, telefonen som
+ * rund ikonknapp, och den glider upp först när artikeln faktiskt läses. */
 @media (max-width: 720px) {
   aside.jq-post-hero-ctas--floating {
-    bottom: 12px !important;
-    padding: 8px !important;
+    left: 12px !important;
+    right: 92px !important;               /* plats åt Welvo-bubblan */
+    width: auto !important;
+    max-width: none !important;
+    transform: translateY(140%) !important;
+    bottom: calc(10px + env(safe-area-inset-bottom, 0px)) !important;
+    padding: 7px !important;
+    gap: 7px !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transition: transform .32s cubic-bezier(.22,1,.36,1), opacity .28s ease !important;
   }
-  aside.jq-post-hero-ctas--floating .jq-btn {
-    padding: 10px 14px !important;
-    font-size: 11px !important;
+  aside.jq-post-hero-ctas--floating.jq-visa {
+    transform: translateY(0) !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
   }
-  aside.jq-post-hero-ctas--floating .jq-btn--ghost-dark span,
-  aside.jq-post-hero-ctas--floating .jq-btn--ghost-dark { font-size: 11px !important; }
+  aside.jq-post-hero-ctas--floating .jq-btn--solid {
+    flex: 1 1 auto !important;
+    justify-content: center !important;
+    padding: 13px 14px !important;
+    font-size: 11.5px !important;
+  }
+  /* Telefonen: 44 px rund träffyta, numret ersatt av ikon. */
+  aside.jq-post-hero-ctas--floating .jq-btn--ghost-dark {
+    flex: 0 0 auto !important;
+    width: 44px !important;
+    height: 44px !important;
+    padding: 0 !important;
+    justify-content: center !important;
+  }
+  aside.jq-post-hero-ctas--floating .jq-tel-nr { display: none !important; }
+  aside.jq-post-hero-ctas--floating .jq-tel-ikon { display: block !important; }
 }
 .jq-post-hero-ctas .jq-btn {
   display: inline-flex !important;
@@ -2044,6 +2076,68 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
       catch(e) { console.error("[JQ.blog] injectMidArticleCta:", e); }
     }
 
+    /**
+     * När den flytande baren får synas på mobil.
+     *
+     * Tre villkor, alla mätta på riktig DOM i stället för antagna:
+     *  1. Läsaren har kommit en bit ner (600 px) — en bar som möter någon i
+     *     samma sekund som sidan laddar är en avbrytning, inte ett erbjudande.
+     *  2. Kakbannern är besvarad. Annars ligger baren ovanpå "Acceptera", och
+     *     bannern vinner alltid: den ska bort innan något annat får plats.
+     *     Den känns igen på innehållet (den ligger utan stabilt id i ett
+     *     fixed-element) — samma metod som quiz-popupen redan använder.
+     *  3. Quiz-CTA:n mitt i artikeln är inte i vy. Två erbjudanden samtidigt
+     *     på en 390 px-skärm gör att inget av dem läses.
+     *
+     * Desktop rörs inte — där finns plats och baren har alltid stått.
+     */
+    function styrFlytandeBar(bar) {
+      if (!bar) return;
+      var mobil = window.matchMedia("(max-width: 720px)");
+      var mid = null;
+
+      function kakbannerUppe() {
+        try {
+          var traff = false;
+          document.querySelectorAll("body > div, body > aside, body > section").forEach(function (el) {
+            if (traff) return;
+            var cs = getComputedStyle(el);
+            if (cs.position !== "fixed" || cs.visibility === "hidden" || cs.display === "none") return;
+            var r = el.getBoundingClientRect();
+            if (r.height < 40 || r.bottom < window.innerHeight - 8) return;
+            if (/kakor|cookie|samtycke/i.test(el.innerText || "")) traff = true;
+          });
+          return traff;
+        } catch (e) { return false; }
+      }
+
+      function midCtaIVy() {
+        if (!mid) mid = document.querySelector(".jq-mid-cta");
+        if (!mid) return false;
+        var r = mid.getBoundingClientRect();
+        return r.top < window.innerHeight * 0.9 && r.bottom > 0;
+      }
+
+      function uppdatera() {
+        if (!mobil.matches) { bar.classList.add("jq-visa"); return; }
+        var visa = window.scrollY > 600 && !kakbannerUppe() && !midCtaIVy();
+        bar.classList.toggle("jq-visa", visa);
+      }
+
+      var vantar = false;
+      window.addEventListener("scroll", function () {
+        if (vantar) return;
+        vantar = true;
+        requestAnimationFrame(function () { vantar = false; uppdatera(); });
+      }, { passive: true });
+      window.addEventListener("resize", uppdatera, { passive: true });
+      /* Kakbannern försvinner utan att scrollen rör sig, och mid-CTA:n
+       * injiceras efter baren — därför en långsam puls också. */
+      var puls = setInterval(uppdatera, 900);
+      setTimeout(function () { clearInterval(puls); setInterval(uppdatera, 3000); }, 30000);
+      uppdatera();
+    }
+
     // === HERO CTA — ALLTID-SYNLIG FLOATING BAR ========================= //
     // Wix tar bort element som injectas i deras managed DOM-tree. Lösning:
     // använd <aside> direkt på document.body med position:fixed — utanför
@@ -2051,16 +2145,22 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
     // som backup. Alltid synlig längst ner på post-pages.
     function injectHeroCTAs() {
       if (document.querySelector(".jq-post-hero-ctas")) return true;
+      /* Telefonen är ett nummer på desktop och en ikonknapp på mobil — på
+       * 390 px konkurrerade tio siffror med bokningsknappen om samma rad. */
       var ctaHtml =
         '<a class="jq-btn jq-btn--solid" href="/boka">Boka konsultation <span aria-hidden="true">→</span></a>' +
-        '<a class="jq-btn jq-btn--ghost-dark" href="tel:+46317135784">031-713 57 84</a>';
+        '<a class="jq-btn jq-btn--ghost-dark" href="tel:+46317135784" aria-label="Ring JQ.Klinik, 031-713 57 84">'
+        + '<span class="jq-tel-nr">031-713 57 84</span>'
+        + '<svg class="jq-tel-ikon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+        + '<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.4 2.1L8.1 9.9a16 16 0 0 0 6 6l1.4-1.4a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/>'
+        + '</svg></a>';
       // Som <aside> top-level — outside Wix-tree
       var aside = document.createElement("aside");
       aside.className = "jq-post-hero-ctas jq-post-hero-ctas--floating";
       aside.setAttribute("role", "complementary");
       aside.setAttribute("aria-label", "Boka konsultation");
       aside.innerHTML = ctaHtml;
-      try { document.body.appendChild(aside); return true; } catch(_) {}
+      try { document.body.appendChild(aside); styrFlytandeBar(aside); return true; } catch(_) {}
 
       // Defensive fallback — försök inom Wix-tree också
       var ctaBlock = document.createElement("div");
@@ -2084,7 +2184,7 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
       }
       // Försök 4: fixed-position i body (alltid synligt)
       ctaBlock.classList.add("jq-post-hero-ctas--floating");
-      try { document.body.appendChild(ctaBlock); return true; } catch(_) {}
+      try { document.body.appendChild(ctaBlock); styrFlytandeBar(ctaBlock); return true; } catch(_) {}
       return false;
     }
 
