@@ -1680,8 +1680,29 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
       window.addEventListener("scroll", tick, { passive: true });
       tick();
 
-      // Injicera Götadental-sektioner (Varför + CTA + Relaterade) — både /post och /blog
+      /* SLUTBLOCKET MÅSTE ÖVERLEVA WIX EGEN RENDERING.
+       *
+       * Mätt 2026-09-17: blocket lades in efter 132 ms — innan Wix hunnit
+       * rendera sidan — och var borta när sidan stod klar. Varken
+       * Element.remove() eller vår egen städning kördes; Wix byter ut
+       * innehållet i containern vi lade oss i, och tar då med vårt block.
+       * Följden var att #jq-blog-extra saknades HELT på både /post och
+       * /blog, alltså både "Varför specialist", slut-CTA:n till quizet och
+       * Relaterade artiklar. Back-link, faktagranskat och mid-CTA:n
+       * överlevde bara för att de injiceras av en retry-slinga som väntar
+       * på att Wix innehåll ska finnas.
+       *
+       * Därför: samma princip här. injectExtras() är idempotent (den
+       * returnerar direkt om blocket redan finns), så vi kallar den tills
+       * den får fäste. jqPromo dedupar per session, så räknaren blåses
+       * inte upp av omförsöken. */
       injectExtras();
+      var extraForsok = 0;
+      var extraTimer = setInterval(function () {
+        extraForsok++;
+        if (!document.getElementById("jq-blog-extra")) injectExtras();
+        if (extraForsok >= 30) clearInterval(extraTimer);   // 30 × 500 ms = 15 s
+      }, 500);
 
       // ── /blog-archive injects (hero + filter + featured + lista) ──
       if (isBlog) {
