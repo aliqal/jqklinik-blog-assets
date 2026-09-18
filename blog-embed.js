@@ -1969,6 +1969,31 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
     }
 
     // === Götadental-matching extra-sektioner ========================== //
+    /* EFTERVÅRDSINLÄGG SKA INTE BE OM EN BOKNING (2026-09-18).
+     *
+     * Uppmätt i GA4 21 aug–16 sep: 35 % av all trafik (575 av 1 659
+     * sidsessioner) går till eftervårdsinnehåll — "att tänka på efter botox",
+     * "biverkningar", "hur länge håller". Det är ungefär 21 personer om dagen
+     * som REDAN ÄR BEHANDLADE. De kan inte boka i dag, och slutblocket bad
+     * dem ändå göra det.
+     *
+     * De kan däremot lämna ett omdöme, och det är precis vad vi saknar:
+     * 15 Google-omdömen mot 74 för den svagaste kliniken i kartpaketet på
+     * "botox göteborg". Googles egen definition av lokal prominens är
+     * länkar plus omdömen.
+     *
+     * Frågan är NEUTRALT formulerad med avsikt. Att bara be nöjda kunder om
+     * omdöme — review gating — bryter mot Googles riktlinjer. Den som inte
+     * är nöjd ombeds ringa i stället, vilket är både ärligare och bättre
+     * för kliniken. */
+    function arEftervardsinlagg() {
+      try {
+        var h1 = document.querySelector('[data-hook="post-title"], h1');
+        var txt = (h1 ? h1.textContent : "") + " " + decodeURIComponent(location.pathname);
+        return /eftervård|efter behandling|att tänka på efter|biverkning|hur länge håller|dagen efter|återhämtning|löses upp/i.test(txt);
+      } catch (e) { return false; }
+    }
+
     function injectExtras() {
       if (document.getElementById("jq-blog-extra")) return;
       const whyHtml = '<section class="jq-sec jq-blog-why"><div class="jq-wrap">'
@@ -1982,7 +2007,17 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
         + '<li class="jq-blog-why-card"><span class="jq-blog-why-n">02</span><span class="jq-blog-why-cat">Fast pris</span><h3 class="jq-blog-why-t">Inga dolda <em>avgifter.</em></h3><p class="jq-blog-why-p">Behandlingsplan och slutpris vid konsultationen. Räntefri delbetalning från 300&nbsp;kr/mån via Resursbanken.</p></li>'
         + '<li class="jq-blog-why-card"><span class="jq-blog-why-n">03</span><span class="jq-blog-why-cat">Erfarenhet</span><h3 class="jq-blog-why-t">2&nbsp;000+ <em>behandlingar.</em></h3><p class="jq-blog-why-p">Specialistklinik mitt i Göteborg. Anatomi-driven approach, naturliga resultat och patientsäkerhet i första rummet.</p></li>'
         + '</ol></div></section>';
-      const ctaHtml = '<section class="jq-sec jq-blog-cta-sec"><div class="jq-wrap"><div class="jq-blog-cta">'
+      const eftervard = arEftervardsinlagg();
+      const omdomeHtml = '<section class="jq-sec jq-blog-cta-sec"><div class="jq-wrap"><div class="jq-blog-cta">'
+        + '<span class="jq-eyebrow">Efter din behandling</span>'
+        + '<h3 class="jq-blog-cta-h">Hur gick det <em>för dig?</em></h3>'
+        + '<p class="jq-blog-cta-lede">Några rader om hur det gick hjälper nästa person som står där du stod och funderar. Blev något inte som du tänkt — ring oss i stället, så tar vi tag i det samma dag.</p>'
+        + '<div class="jq-blog-cta-meta"><span>Tar en minut</span><span>Hjälper nästa patient</span></div>'
+        + '<div class="jq-blog-cta-btns">'
+        + '<a class="jq-btn jq-btn--solid" href="https://g.page/r/CbVC2aUaMhxkEAE/review" target="_blank" rel="noopener noreferrer">Lämna ett omdöme<span class="jq-arw" aria-hidden="true">&rarr;</span></a>'
+        + '<a class="jq-btn jq-btn--ghost" href="tel:+46317540004">031-754 00 04</a>'
+        + '</div></div></div></section>';
+      const bokaHtml = '<section class="jq-sec jq-blog-cta-sec"><div class="jq-wrap"><div class="jq-blog-cta">'
         + '<span class="jq-eyebrow">Nästa steg</span>'
         + '<h3 class="jq-blog-cta-h">Vilken behandling passar <em>dig?</em></h3>'
         + '<p class="jq-blog-cta-lede">Svara på sex korta frågor så matchar vi dig med rätt behandling, pris och plan — framtaget av leg. specialisttandläkare med estetik-inriktning.</p>'
@@ -1991,6 +2026,7 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
         + '<a class="jq-btn jq-btn--solid" href="/hitta-din-behandling">Gör quizet<span class="jq-arw" aria-hidden="true">&rarr;</span></a>'
         + '<a class="jq-btn jq-btn--ghost" href="/boka">Boka konsultation</a>'
         + '</div></div></div></section>';
+      const ctaHtml = eftervard ? omdomeHtml : bokaHtml;
       const relatedShell = isPost ? '<section class="jq-sec jq-blog-related-sec" id="jq-blog-related-shell"></section>' : '';
 
       const extra = document.createElement("aside");
