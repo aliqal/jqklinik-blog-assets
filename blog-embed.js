@@ -1990,31 +1990,52 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
       return _jqQuizLaddas;
     }
 
-    /* Byter ut kortets innehåll mot quizet. Misslyckas laddningen faller vi
-     * tillbaka på länken — läsaren ska aldrig bli kvar med en död knapp. */
+    /* DELEGERING, INTE EN LYSSNARE PER KNAPP.
+     *
+     * Första versionen satte en click-lyssnare på knappen när kortet
+     * injicerades. Mätt live: klicket navigerade ändå bort till
+     * /hitta-din-behandling. Wix river och återinjicerar bloggens block (det
+     * var samma orsak som att slutblocket försvann 17/9), och lyssnaren satt
+     * då på en nod som inte längre är i dokumentet.
+     *
+     * En lyssnare på document överlever varje återinjektion, för den är inte
+     * bunden till noden alls. */
+    var _jqQuizDelegerad = false;
     function jqQuizInline(kort, yta) {
-      if (!kort) return;
-      var knapp = kort.querySelector('a[href="/hitta-din-behandling"]');
-      if (!knapp) return;
-      knapp.addEventListener("click", function (ev) {
+      if (kort && yta) {
+        try { kort.setAttribute("data-jq-quizyta", yta); } catch (e) {}
+      }
+      if (_jqQuizDelegerad) return;
+      _jqQuizDelegerad = true;
+
+      document.addEventListener("click", function (ev) {
+        var lank = ev.target && ev.target.closest && ev.target.closest('a[href="/hitta-din-behandling"]');
+        if (!lank) return;
+        var kortEl = lank.closest(".jq-mid-cta, .jq-blog-cta-sec, .jq-blog-cta");
+        if (!kortEl) return;                       // andra länkar dit får bete sig normalt
+        if (document.querySelector(".jq-quiz-inline")) return;   // redan öppnat
+
         ev.preventDefault();
-        var text = knapp.innerHTML;
-        knapp.innerHTML = "Öppnar…";
+        var ytan = kortEl.getAttribute("data-jq-quizyta") || "blogg";
+        var text = lank.innerHTML;
+        lank.innerHTML = "Öppnar…";
         try {
           fetch("/_functions/promoEvent", {
             method: "POST", headers: { "content-type": "application/json" },
-            body: JSON.stringify({ name: "quiz_inbakad_" + yta, type: "click" }), keepalive: true
+            body: JSON.stringify({ name: "quiz_inbakad_" + ytan, type: "click" }), keepalive: true
           }).catch(function () {});
         } catch (e) {}
+
         jqLaddaQuiz().then(function (ok) {
-          if (!ok) { knapp.innerHTML = text; window.location.href = "/hitta-din-behandling"; return; }
+          if (!ok) { lank.innerHTML = text; window.location.href = "/hitta-din-behandling"; return; }
           var box = document.createElement("div");
           box.className = "jq-quiz-inline";
           box.appendChild(document.createElement("jq-quiz"));
-          kort.parentNode.replaceChild(box, kort);
+          var mal = kortEl.closest(".jq-blog-cta-sec") || kortEl;
+          if (mal.parentNode) mal.parentNode.replaceChild(box, mal);
           try { box.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) {}
         });
-      });
+      }, true);
     }
 
     /* Löftet om värdechecken läser samma flagga som backend faktiskt agerar
