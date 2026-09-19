@@ -658,6 +658,28 @@ html body #jq-archive {
 .jq-host-cta .jq-mid-cta-eyebrow { color: #b48b56; }
 .jq-host-cta .jq-mid-cta-meta span { border-color: rgba(180,139,86,.45); }
 
+/* Quizets helskärmslager. Samma mönster som quizInbakad.tsx. */
+.jq-quizlager{
+  position:fixed; inset:0; z-index:2147483000;
+  background:#efe7d8; display:flex; flex-direction:column;
+}
+.jq-quizlager-rull{
+  flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;
+}
+.jq-quizlager-rull jq-quiz{ display:block; min-height:0 !important; }
+.jq-quizlager-stang{
+  position:absolute; top:max(12px, env(safe-area-inset-top)); right:14px;
+  z-index:2; width:40px; height:40px; border-radius:999px; cursor:pointer;
+  border:1px solid rgba(0,0,0,.14); background:rgba(255,255,255,.88);
+  color:#211d15; font-size:16px; line-height:1;
+  display:flex; align-items:center; justify-content:center;
+}
+@media (min-width: 900px){
+  .jq-quizlager{ padding:4vh 0; background:rgba(20,17,12,.55); }
+  .jq-quizlager-rull{ max-width:1100px; width:92%; margin:0 auto; background:#efe7d8; border-radius:14px; }
+}
+
 .jq-quiz-inline {
   margin: clamp(28px, 6vw, 56px) auto;
   max-width: 1100px;
@@ -2056,15 +2078,57 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
             window.location.href = knapp.getAttribute("data-jq-fallback") || "/hitta-din-behandling";
             return;
           }
-          var box = document.createElement("div");
-          box.className = "jq-quiz-inline";
-          box.appendChild(document.createElement("jq-quiz"));
-          var kortEl = knapp.closest(".jq-blog-cta-sec") || knapp.closest(".jq-mid-cta") || knapp.closest(".jq-blog-cta");
-          if (kortEl && kortEl.parentNode) kortEl.parentNode.replaceChild(box, kortEl);
-          else knapp.parentNode.replaceChild(box, knapp);
-          try { box.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) {}
+          /* HELSKÄRM, INTE I ARTIKELFLÖDET.
+           * Ali på mobil: "quiz innehåller scroll, det är fel UI". Quizet är
+           * ~1 300 px på en 844 px skärm — monterat i artikeln blev det en
+           * rullande vy inuti en rullande sida. Lagret äger skärmen; det är
+           * fortfarande samma sida och läspositionen återställs vid stängning. */
+          knapp.innerHTML = text; knapp.disabled = false;
+          jqOppnaQuizLager();
         });
       });
+    }
+
+    /* Quizet i ett helskärmslager. Bloggen rullar BODY (window.scrollY är
+     * alltid 0 på /post och /blog), så båda låses — låser man bara den ena
+     * rullar den andra vidare bakom lagret. */
+    function jqOppnaQuizLager() {
+      if (document.querySelector(".jq-quizlager")) return;
+      var pos = window.scrollY || document.body.scrollTop || document.documentElement.scrollTop || 0;
+      var foreB = document.body.style.overflow, foreD = document.documentElement.style.overflow;
+
+      var lager = document.createElement("div");
+      lager.className = "jq-quizlager";
+      lager.setAttribute("role", "dialog");
+      lager.setAttribute("aria-modal", "true");
+      lager.setAttribute("aria-label", "Behandlingsquiz");
+
+      var stang = document.createElement("button");
+      stang.type = "button";
+      stang.className = "jq-quizlager-stang";
+      stang.setAttribute("aria-label", "Stäng quizet");
+      stang.innerHTML = "&#10005;";
+
+      var rull = document.createElement("div");
+      rull.className = "jq-quizlager-rull";
+      rull.appendChild(document.createElement("jq-quiz"));
+
+      lager.appendChild(stang);
+      lager.appendChild(rull);
+      document.body.appendChild(lager);
+      document.body.style.overflow = "hidden";
+      document.documentElement.style.overflow = "hidden";
+
+      function stangNed() {
+        document.body.style.overflow = foreB;
+        document.documentElement.style.overflow = foreD;
+        document.removeEventListener("keydown", paEsc);
+        if (lager.parentNode) lager.parentNode.removeChild(lager);
+        try { window.scrollTo(0, pos); document.body.scrollTop = pos; } catch (e) {}
+      }
+      function paEsc(e) { if (e.key === "Escape") stangNed(); }
+      stang.addEventListener("click", stangNed);
+      document.addEventListener("keydown", paEsc);
     }
 
     /* Löftet om värdechecken läser samma flagga som backend faktiskt agerar
