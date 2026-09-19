@@ -649,6 +649,16 @@ html body #jq-archive {
 /* Kort i varm sand med guldhairline i stället för två nakna linjer.
  * Wix [data-hook="post-content"] p-regler vinner annars på specificitet och
  * gjorde underrubriken serif/kursiv — därför !important på typografin här. */
+/* Quizet när det öppnats på plats. jq-quiz reserverar sin egen höjd
+   (quiz-entry sätter min-height före React-mount), så här styrs bara bredd
+   och luft — ingen extra höjdreservation som skapar ett tomt glapp. */
+.jq-quiz-inline {
+  margin: clamp(28px, 6vw, 56px) auto;
+  max-width: 1100px;
+  width: 100%;
+}
+.jq-quiz-inline jq-quiz { display: block; width: 100%; }
+
 .jq-mid-cta {
   position: relative; isolation: isolate;
   border: 1px solid #E2D6BC; border-radius: 16px;
@@ -1932,6 +1942,96 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
      * renderad storlek så den inte drar onödig vikt i bloggen. */
     var JQ_PORTRAIT = "https://static.wixstatic.com/media/a95528_6718bf09f86943a0983bf7c5a1504875~mv2.png/v1/fill/w_296,h_370,al_c,q_85,enc_auto/a95528_6718bf09f86943a0983bf7c5a1504875~mv2.png";
 
+    /* ================================================================ *
+     * QUIZET PÅ PLATS I BLOGGEN
+     *
+     * Ali 2026-09-19: "baka in den överallt." Bloggen bär 76-82 % av sajtens
+     * klick men skickade läsaren till /hitta-din-behandling — ett sidbyte mitt
+     * i läsningen, och mätt CTR var 4,6 % (mid) och 1,8 % (slut).
+     *
+     * <jq-quiz> definieras i quiz.js, som ligger hos Wix velo-bundler. URL:en
+     * går INTE att hårdkoda (/public/custom-elements/quiz.js ger 404) och
+     * filnamnet står mitt i sökvägen, inte sist:
+     *
+     *   …/filePath_public_delimiter_custom-elements_delimiter_chrome.js/fileType_js/…
+     *
+     * chrome.js finns på varje bloggsida (jq-header/jq-footer), så adressen
+     * härleds ur den. Ett regex, inte endsWith — det felet kostade en
+     * publicering i React-bundlarna samma dag.
+     * ================================================================ */
+    var _jqQuizLaddas = null;
+    function jqLaddaQuiz() {
+      if (window.customElements && customElements.get("jq-quiz")) return Promise.resolve(true);
+      if (_jqQuizLaddas) return _jqQuizLaddas;
+      var src = [].slice.call(document.querySelectorAll("script[src]")).map(function (x) { return x.src; });
+      var syskon = ["chrome.js", "behandling.js", "startsida.js"];
+      var url = "";
+      for (var i = 0; i < syskon.length && !url; i++) {
+        var rx = new RegExp("(^|[/_])" + syskon[i].replace(".", "\\.") + "([/?]|$)");
+        for (var j = 0; j < src.length; j++) {
+          if (rx.test(src[j])) { url = src[j].replace(syskon[i], "quiz.js"); break; }
+        }
+      }
+      if (!url) {
+        console.warn("[JQ.blog] hittade ingen syskonbundle - quizet kan inte laddas");
+        return Promise.resolve(false);
+      }
+      _jqQuizLaddas = new Promise(function (klar) {
+        var el = document.createElement("script");
+        el.src = url;
+        el.async = true;
+        el.setAttribute("data-jq-quiz", "");
+        el.onload = function () {
+          customElements.whenDefined("jq-quiz").then(function () { klar(true); }, function () { klar(false); });
+        };
+        el.onerror = function () { console.warn("[JQ.blog] quiz.js kunde inte hamtas:", url); klar(false); };
+        document.head.appendChild(el);
+      });
+      return _jqQuizLaddas;
+    }
+
+    /* Byter ut kortets innehåll mot quizet. Misslyckas laddningen faller vi
+     * tillbaka på länken — läsaren ska aldrig bli kvar med en död knapp. */
+    function jqQuizInline(kort, yta) {
+      if (!kort) return;
+      var knapp = kort.querySelector('a[href="/hitta-din-behandling"]');
+      if (!knapp) return;
+      knapp.addEventListener("click", function (ev) {
+        ev.preventDefault();
+        var text = knapp.innerHTML;
+        knapp.innerHTML = "Öppnar…";
+        try {
+          fetch("/_functions/promoEvent", {
+            method: "POST", headers: { "content-type": "application/json" },
+            body: JSON.stringify({ name: "quiz_inbakad_" + yta, type: "click" }), keepalive: true
+          }).catch(function () {});
+        } catch (e) {}
+        jqLaddaQuiz().then(function (ok) {
+          if (!ok) { knapp.innerHTML = text; window.location.href = "/hitta-din-behandling"; return; }
+          var box = document.createElement("div");
+          box.className = "jq-quiz-inline";
+          box.appendChild(document.createElement("jq-quiz"));
+          kort.parentNode.replaceChild(box, kort);
+          try { box.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) {}
+        });
+      });
+    }
+
+    /* Löftet om värdechecken läser samma flagga som backend faktiskt agerar
+     * på. Stängdes koden av står annars "1 000 kr värdecheck" kvar i bloggen
+     * och lovar något kunden inte får. */
+    function jqDoljAvstangdBelOning(rot) {
+      try {
+        fetch("/_functions/quizBelOning").then(function (r) { return r.json(); }).then(function (d) {
+          if (!d || !d.ok || d.aktiv !== false) return;
+          var chips = (rot || document).querySelectorAll(".jq-blog-cta-meta span, .jq-mid-cta-meta span");
+          for (var i = 0; i < chips.length; i++) {
+            if (/värdecheck|värdekod/i.test(chips[i].textContent || "")) chips[i].remove();
+          }
+        }).catch(function () {});
+      } catch (e) {}
+    }
+
     function jqPromo(name, el) {
       if (!el) return;
       function send(type) {
@@ -2048,6 +2148,8 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
       }
       // Mätningen följer med oavsett var blocket hamnade.
       try { jqPromo("blog_end_cta", extra.querySelector(".jq-blog-cta")); } catch (e) {}
+      try { jqQuizInline(extra.querySelector(".jq-blog-cta-sec"), "blogg_slut"); } catch (e) {}
+      try { jqDoljAvstangdBelOning(extra); } catch (e) {}
       if (isPost) fetchRelatedPosts();
     }
 
@@ -2129,6 +2231,8 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
       try {
         insertAfter.parentNode.insertBefore(cta, insertAfter.nextSibling);
         jqPromo("blog_mid_cta", cta);
+        jqQuizInline(cta, "blogg_mitt");
+        jqDoljAvstangdBelOning(cta);
       }
       catch(e) { console.error("[JQ.blog] injectMidArticleCta:", e); }
     }
