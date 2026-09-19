@@ -1990,35 +1990,53 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
       return _jqQuizLaddas;
     }
 
-    /* DELEGERING, INTE EN LYSSNARE PER KNAPP.
+    /* ETT <a href="/hitta-din-behandling"> GÅR INTE ATT HINDRA.
      *
-     * Första versionen satte en click-lyssnare på knappen när kortet
-     * injicerades. Mätt live: klicket navigerade ändå bort till
-     * /hitta-din-behandling. Wix river och återinjicerar bloggens block (det
-     * var samma orsak som att slutblocket försvann 17/9), och lyssnaren satt
-     * då på en nod som inte längre är i dokumentet.
+     * Mätt live 2026-09-19, i tre steg:
+     *  1. Lyssnare på knappen → navigerade bort. Wix river och återinjicerar
+     *     bloggens block, så lyssnaren satt på en lös nod.
+     *  2. Delegering på document → `ev.defaultPrevented` blev **true** och
+     *     knappen bytte text till "Öppnar…" — och sidan navigerade ÄNDÅ.
+     *  3. Slutsats: Wix egen SPA-router fångar klick på interna rutter och
+     *     navigerar på egen hand. preventDefault på vår sida hjälper inte,
+     *     för det är inte webbläsarens standardbeteende som flyttar sidan.
      *
-     * En lyssnare på document överlever varje återinjektion, för den är inte
-     * bunden till noden alls. */
+     * Därför får triggern inte VARA en intern länk. <a> byts mot <button>
+     * med samma klasser — routern har då ingen rutt att reagera på. Länken
+     * behålls som `data-jq-fallback` så vi kan skicka dit läsaren om
+     * bundeln inte går att hämta.
+     *
+     * (Direkt laddning av quiz.js verifierades separat: 200, elementet
+     * definieras. Problemet satt aldrig i bundeln.) */
     var _jqQuizDelegerad = false;
     function jqQuizInline(kort, yta) {
-      if (kort && yta) {
-        try { kort.setAttribute("data-jq-quizyta", yta); } catch (e) {}
+      if (kort) {
+        try {
+          var a = kort.querySelector('a[href="/hitta-din-behandling"]');
+          if (a) {
+            var knapp = document.createElement("button");
+            knapp.type = "button";
+            knapp.className = a.className;
+            knapp.innerHTML = a.innerHTML;
+            knapp.setAttribute("data-jq-quiz-open", yta || "blogg");
+            knapp.setAttribute("data-jq-fallback", "/hitta-din-behandling");
+            a.parentNode.replaceChild(knapp, a);
+          }
+        } catch (e) { console.error("[JQ.blog] kunde inte byta lank mot knapp:", e); }
       }
       if (_jqQuizDelegerad) return;
       _jqQuizDelegerad = true;
 
+      /* Delegering på document så återinjektion inte tappar bindningen. */
       document.addEventListener("click", function (ev) {
-        var lank = ev.target && ev.target.closest && ev.target.closest('a[href="/hitta-din-behandling"]');
-        if (!lank) return;
-        var kortEl = lank.closest(".jq-mid-cta, .jq-blog-cta-sec, .jq-blog-cta");
-        if (!kortEl) return;                       // andra länkar dit får bete sig normalt
+        var knapp = ev.target && ev.target.closest && ev.target.closest("[data-jq-quiz-open]");
+        if (!knapp) return;
         if (document.querySelector(".jq-quiz-inline")) return;   // redan öppnat
 
-        ev.preventDefault();
-        var ytan = kortEl.getAttribute("data-jq-quizyta") || "blogg";
-        var text = lank.innerHTML;
-        lank.innerHTML = "Öppnar…";
+        var ytan = knapp.getAttribute("data-jq-quiz-open") || "blogg";
+        var text = knapp.innerHTML;
+        knapp.innerHTML = "Öppnar…";
+        knapp.disabled = true;
         try {
           fetch("/_functions/promoEvent", {
             method: "POST", headers: { "content-type": "application/json" },
@@ -2027,15 +2045,20 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
         } catch (e) {}
 
         jqLaddaQuiz().then(function (ok) {
-          if (!ok) { lank.innerHTML = text; window.location.href = "/hitta-din-behandling"; return; }
+          if (!ok) {
+            knapp.innerHTML = text; knapp.disabled = false;
+            window.location.href = knapp.getAttribute("data-jq-fallback") || "/hitta-din-behandling";
+            return;
+          }
           var box = document.createElement("div");
           box.className = "jq-quiz-inline";
           box.appendChild(document.createElement("jq-quiz"));
-          var mal = kortEl.closest(".jq-blog-cta-sec") || kortEl;
-          if (mal.parentNode) mal.parentNode.replaceChild(box, mal);
+          var kortEl = knapp.closest(".jq-blog-cta-sec") || knapp.closest(".jq-mid-cta") || knapp.closest(".jq-blog-cta");
+          if (kortEl && kortEl.parentNode) kortEl.parentNode.replaceChild(box, kortEl);
+          else knapp.parentNode.replaceChild(box, knapp);
           try { box.scrollIntoView({ behavior: "smooth", block: "start" }); } catch (e) {}
         });
-      }, true);
+      });
     }
 
     /* Löftet om värdechecken läser samma flagga som backend faktiskt agerar
