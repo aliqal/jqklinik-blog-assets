@@ -652,6 +652,12 @@ html body #jq-archive {
 /* Quizet när det öppnats på plats. jq-quiz reserverar sin egen höjd
    (quiz-entry sätter min-height före React-mount), så här styrs bara bredd
    och luft — ingen extra höjdreservation som skapar ett tomt glapp. */
+/* Kampanjkortet är samma kort som quiz-CTA:n, med en accentram så att det
+   läses som ett erbjudande och inte som ännu en uppmaning. */
+.jq-host-cta { border-color: #b48b56 !important; }
+.jq-host-cta .jq-mid-cta-eyebrow { color: #b48b56; }
+.jq-host-cta .jq-mid-cta-meta span { border-color: rgba(180,139,86,.45); }
+
 .jq-quiz-inline {
   margin: clamp(28px, 6vw, 56px) auto;
   max-width: 1100px;
@@ -2130,6 +2136,54 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
      * omdöme — review gating — bryter mot Googles riktlinjer. Den som inte
      * är nöjd ombeds ringa i stället, vilket är både ärligare och bättre
      * för kliniken. */
+    /* ===================== HÖSTKAMPANJEN I BLOGGEN =====================
+     *
+     * Kampanjen (15 % på Profhilo och Botox) syntes bara i ett 33 px högt band
+     * högst upp. Mätt 2026-09-19: bandet **syns** på startsida, behandlingssida
+     * och blogg — men 146 visningar och 2 klick. 146 är ungefär hela sajtens
+     * publik på ett och ett halvt dygn. Problemet var aldrig att bandet var
+     * dolt, utan att en tunn remsa utan sammanhang konverterar 1,4 %.
+     *
+     * Den stora publiken finns i bloggen: eftervårdsinlägget om botox har
+     * 3 258 visningar per 28 dagar och profhilo-inlägget 2 303. Läser någon om
+     * just profhilo är 15 % på profhilo inte en annons — det är svaret på
+     * frågan de håller på att ställa.
+     *
+     * Därför: på inlägg som handlar om profhilo eller botox ERSÄTTER
+     * kampanjen quiz-kortet i mitten. Två konkurrerande erbjudanden i samma
+     * yta försvagar varandra, och det mest relevanta ska vinna. Övriga inlägg
+     * behåller quizet oförändrat.
+     *
+     * Slutdatumet speglar Chrome.tsx (HOST_SLUT). Går kampanjen ut slutar
+     * blocket visas av sig självt — ett erbjudande som gått ut är värre än
+     * inget alls. */
+    var HOST_SLUT = Date.parse("2026-10-31T23:59:00+01:00");
+    function kampanjensBehandling() {
+      if (Date.now() >= HOST_SLUT) return null;
+      try {
+        var h1 = document.querySelector('[data-hook="post-title"], h1');
+        var txt = ((h1 ? h1.textContent : "") + " " + decodeURIComponent(location.pathname)).toLowerCase();
+        if (/profhilo/.test(txt)) return "Profhilo";
+        if (/botox/.test(txt)) return "Botox";
+        return null;
+      } catch (e) { return null; }
+    }
+
+    function kampanjKortHtml(behandling) {
+      return '<div class="jq-mid-cta jq-host-cta">'
+        + '<div class="jq-mid-cta-row">'
+        + '<span class="jq-mid-cta-fig"><img src="' + JQ_PORTRAIT + '" alt="Jilah Qaljaee, leg. specialisttandläkare" loading="lazy" decoding="async" width="296" height="370"></span>'
+        + '<div class="jq-mid-cta-body">'
+        + '<span class="jq-mid-cta-eyebrow">Höstkampanj</span>'
+        + '<p class="jq-mid-cta-t">15 % på ' + behandling + ' <em>i höst</em></p>'
+        + '<p class="jq-mid-cta-sub">Du behöver ingen kod — rabatten dras när du betalar på kliniken. Behandlingen görs av Jilah Qaljaee, leg. specialisttandläkare. Gäller till 31 oktober.</p>'
+        + '<div class="jq-mid-cta-meta"><span>15 % rabatt</span><span>30 platser</span><span>Ingen kod</span></div>'
+        + '<div class="jq-mid-cta-btns">'
+        + '<a class="jq-mid-cta-btn jq-mid-cta-btn--primary" href="/glow/hostkampanjen" data-jq-host="blogg_mitt">Se erbjudandet<span class="jq-arw" aria-hidden="true">&rarr;</span></a>'
+        + '<button type="button" class="jq-mid-cta-btn jq-mid-cta-btn--secondary" data-jq-quiz-open="blogg_mitt" data-jq-fallback="/hitta-din-behandling">Vilken passar mig?</button>'
+        + '</div></div></div></div>';
+    }
+
     function arEftervardsinlagg() {
       try {
         var h1 = document.querySelector('[data-hook="post-title"], h1');
@@ -2258,7 +2312,28 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
       var insertAfter = anchor;
       var sib = anchor.nextElementSibling;
       if (sib && !["H1","H2","H3"].includes(sib.tagName)) insertAfter = sib;
+      /* Handlar inlägget om kampanjens behandling vinner kampanjen ytan.
+       * Quizet finns kvar som andraknapp i samma kort. */
+      var kampanj = kampanjensBehandling();
       var cta = document.createElement("div");
+      if (kampanj) {
+        cta.className = "jq-mid-cta-holder";
+        cta.innerHTML = kampanjKortHtml(kampanj);
+        try {
+          insertAfter.parentNode.insertBefore(cta, insertAfter.nextSibling);
+          var kort = cta.querySelector(".jq-host-cta");
+          jqPromo("host_blogg", kort);
+          jqQuizInline(null, "blogg_mitt");      // sätter upp delegeringen
+          var lank = cta.querySelector('a[data-jq-host]');
+          if (lank) lank.addEventListener("click", function () {
+            try {
+              fetch("/_functions/promoEvent", { method: "POST", headers: { "content-type": "application/json" },
+                body: JSON.stringify({ name: "host_blogg", type: "click" }), keepalive: true }).catch(function () {});
+            } catch (e) {}
+          });
+        } catch (e) { console.error("[JQ.blog] injectMidArticleCta (kampanj):", e); }
+        return;
+      }
       cta.className = "jq-mid-cta";
       cta.innerHTML =
         '<div class="jq-mid-cta-row">'
