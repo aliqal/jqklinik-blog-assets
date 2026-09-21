@@ -654,6 +654,31 @@ html body #jq-archive {
    och luft — ingen extra höjdreservation som skapar ett tomt glapp. */
 /* Kampanjkortet är samma kort som quiz-CTA:n, med en accentram så att det
    läses som ett erbjudande och inte som ännu en uppmaning. */
+
+/* WIX BLOGGWIDGETAR VI INTE ANVÄNDER.
+   Mätt 2026-09-21: bloggsidan laddar 431 kB communities-blog-ooi och renderar
+   fem delningsknappar (Facebook, Twitter, LinkedIn, kopiera, SKRIV UT), en
+   gillaknapp med räknare, en kategorimeny och "senaste inlägg".
+   Tre skäl att dölja dem:
+     1. Kategorimenyn pekar på kategorier vi 301:ade 19/9 — de filtrerade
+        ingenting och visade samma 20 artiklar som /blog. Menyn leder alltså
+        till en omdirigering på varje inlägg.
+     2. "Senaste inlägg" dubblerar vår egen relaterade-artiklar-sektion, som
+        väljer på ämne i stället för datum.
+     3. En gillaräknare på noll och en skriv ut-knapp på en klinikartikel är
+        inte premium, de är default.
+   VAD DET INTE GÖR: det stoppar inte Wix JavaScript. De 431 kB laddas och
+   React renderar ändå — bara utan layout och målning. Att få bort arbetet
+   kräver att widgetarna stängs av i bloggens inställningar i Wix. */
+[data-hook="post-main-actions-desktop"],
+[data-hook="post-stats"],
+[data-hook="post-main-actions__stats"],
+[data-hook="like-button"],
+[data-hook="like-button-with-count__like-count"],
+[data-hook^="share-button__"],
+[data-hook="category-dropdown"],
+[data-hook="recent-posts"] { display:none !important; }
+
 .jq-host-cta { border-color: #b48b56 !important; }
 .jq-host-cta .jq-mid-cta-eyebrow { color: #b48b56; }
 .jq-host-cta .jq-mid-cta-meta span { border-color: rgba(180,139,86,.45); }
