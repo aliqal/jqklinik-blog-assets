@@ -2253,7 +2253,7 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
         var h1 = document.querySelector('[data-hook="post-title"], h1');
         var txt = ((h1 ? h1.textContent : "") + " " + decodeURIComponent(location.pathname)).toLowerCase();
         if (/profhilo/.test(txt)) return "Profhilo";
-        if (/botox/.test(txt)) return "Botox";
+        if (/botox/.test(txt)) return "rynkbehandling";
         return null;
       } catch (e) { return null; }
     }
@@ -2265,7 +2265,7 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
         + '<div class="jq-mid-cta-body">'
         + '<span class="jq-mid-cta-eyebrow">Höstkampanj</span>'
         + '<p class="jq-mid-cta-t">15 % på ' + behandling + ' <em>i höst</em></p>'
-        + '<p class="jq-mid-cta-sub">Du behöver ingen kod — rabatten dras när du betalar på kliniken. Behandlingen görs av Jilah Qaljaee, leg. specialisttandläkare. Gäller till 31 oktober.</p>'
+        + '<p class="jq-mid-cta-sub">Du behöver ingen kod, rabatten dras när du betalar på kliniken. Behandlingen görs av Jilah Qaljaee, leg. specialisttandläkare. Gäller till 31 oktober.</p>'
         + '<div class="jq-mid-cta-meta"><span>15 % rabatt</span><span>30 platser</span><span>Ingen kod</span></div>'
         + '<div class="jq-mid-cta-btns">'
         + '<a class="jq-mid-cta-btn jq-mid-cta-btn--primary" href="/glow/hostkampanjen" data-jq-host="blogg_mitt">Se erbjudandet<span class="jq-arw" aria-hidden="true">&rarr;</span></a>'
@@ -2290,15 +2290,15 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
         + '<p class="jq-blog-why-lede">Det är skillnad på en injektion och en specialistbedömning. Här är varför patienter väljer JQ.Klinik.</p>'
         + '</div>'
         + '<ol class="jq-blog-why-grid">'
-        + '<li class="jq-blog-why-card"><span class="jq-blog-why-n">01</span><span class="jq-blog-why-cat">Specialist · alltid</span><h3 class="jq-blog-why-t">Aldrig <em>generisk injektör.</em></h3><p class="jq-blog-why-p">All behandling utförs av leg. specialisttandläkare med expertis i ansiktets anatomi — inte en allmän injektör.</p></li>'
-        + '<li class="jq-blog-why-card"><span class="jq-blog-why-n">02</span><span class="jq-blog-why-cat">Fast pris</span><h3 class="jq-blog-why-t">Inga dolda <em>avgifter.</em></h3><p class="jq-blog-why-p">Behandlingsplan och slutpris vid konsultationen. Räntefri delbetalning från 300&nbsp;kr/mån via Resursbanken.</p></li>'
+        + '<li class="jq-blog-why-card"><span class="jq-blog-why-n">01</span><span class="jq-blog-why-cat">Specialist · alltid</span><h3 class="jq-blog-why-t">Aldrig <em>generisk injektör.</em></h3><p class="jq-blog-why-p">All behandling utförs av leg. specialisttandläkare med expertis i ansiktets anatomi, inte en allmän injektör.</p></li>'
+        + '<li class="jq-blog-why-card"><span class="jq-blog-why-n">02</span><span class="jq-blog-why-cat">Fast pris</span><h3 class="jq-blog-why-t">Inga dolda <em>avgifter.</em></h3><p class="jq-blog-why-p">Behandlingsplan och slutpris vid konsultationen. Räntefri delbetalning från 300&nbsp;kr/mån via Resursbanken (effektiv ränta 12,92&nbsp;% inkl. uppläggningsavgift 149&nbsp;kr och 49&nbsp;kr/mån).</p></li>'
         + '<li class="jq-blog-why-card"><span class="jq-blog-why-n">03</span><span class="jq-blog-why-cat">Erfarenhet</span><h3 class="jq-blog-why-t">2&nbsp;000+ <em>behandlingar.</em></h3><p class="jq-blog-why-p">Specialistklinik mitt i Göteborg. Anatomi-driven approach, naturliga resultat och patientsäkerhet i första rummet.</p></li>'
         + '</ol></div></section>';
       const eftervard = arEftervardsinlagg();
       const omdomeHtml = '<section class="jq-sec jq-blog-cta-sec"><div class="jq-wrap"><div class="jq-blog-cta">'
         + '<span class="jq-eyebrow">Efter din behandling</span>'
         + '<h3 class="jq-blog-cta-h">Hur gick det <em>för dig?</em></h3>'
-        + '<p class="jq-blog-cta-lede">Några rader om hur det gick hjälper nästa person som står där du stod och funderar. Blev något inte som du tänkt — ring oss i stället, så tar vi tag i det samma dag.</p>'
+        + '<p class="jq-blog-cta-lede">Några rader om hur det gick hjälper nästa person som står där du stod och funderar. Blev något inte som du tänkt, ring oss i stället, så tar vi tag i det samma dag.</p>'
         + '<div class="jq-blog-cta-meta"><span>Tar en minut</span><span>Hjälper nästa patient</span></div>'
         + '<div class="jq-blog-cta-btns">'
         + '<a class="jq-btn jq-btn--solid" href="https://g.page/r/CbVC2aUaMhxkEAE/review" target="_blank" rel="noopener noreferrer">Lämna ett omdöme<span class="jq-arw" aria-hidden="true">&rarr;</span></a>'
@@ -2307,8 +2307,8 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
       const bokaHtml = '<section class="jq-sec jq-blog-cta-sec"><div class="jq-wrap"><div class="jq-blog-cta">'
         + '<span class="jq-eyebrow">Nästa steg</span>'
         + '<h3 class="jq-blog-cta-h">Vilken behandling passar <em>dig?</em></h3>'
-        + '<p class="jq-blog-cta-lede">Svara på sex korta frågor så matchar vi dig med rätt behandling, pris och plan — framtaget av leg. specialisttandläkare med estetik-inriktning.</p>'
-        + '<div class="jq-blog-cta-meta"><span>60 sekunder</span><span>6 frågor</span><span>1 000 kr värdecheck</span></div>'
+        + '<p class="jq-blog-cta-lede">Svara på åtta korta frågor så matchar vi dig med rätt behandling, pris och plan, framtaget av leg. specialisttandläkare med estetik-inriktning.</p>'
+        + '<div class="jq-blog-cta-meta"><span>1 minut</span><span>8 frågor</span><span>1 000 kr värdecheck</span></div>'
         + '<div class="jq-blog-cta-btns">'
         + '<a class="jq-btn jq-btn--solid" href="/hitta-din-behandling">Gör quizet<span class="jq-arw" aria-hidden="true">&rarr;</span></a>'
         + '<a class="jq-btn jq-btn--ghost" href="/boka">Boka konsultation</a>'
@@ -2430,8 +2430,8 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
         + '<div class="jq-mid-cta-body">'
         + '<span class="jq-mid-cta-eyebrow">Hitta din behandling</span>'
         + '<p class="jq-mid-cta-t">Vilken behandling passar <em>dig</em>?</p>'
-        + '<p class="jq-mid-cta-sub">Svara på sex korta frågor så matchar vi dig med rätt behandling, pris och plan — framtaget av Jilah Qaljaee, leg. specialisttandläkare.</p>'
-        + '<div class="jq-mid-cta-meta"><span>60 sekunder</span><span>6 frågor</span><span>1 000 kr värdecheck</span></div>'
+        + '<p class="jq-mid-cta-sub">Svara på åtta korta frågor så matchar vi dig med rätt behandling, pris och plan, framtaget av Jilah Qaljaee, leg. specialisttandläkare.</p>'
+        + '<div class="jq-mid-cta-meta"><span>1 minut</span><span>8 frågor</span><span>1 000 kr värdecheck</span></div>'
         + '<div class="jq-mid-cta-btns">'
         + '<a class="jq-mid-cta-btn jq-mid-cta-btn--primary" href="/hitta-din-behandling">Gör quizet<span class="jq-arw" aria-hidden="true">&rarr;</span></a>'
         + '<a class="jq-mid-cta-btn jq-mid-cta-btn--secondary" href="/boka">Boka konsultation</a>'
@@ -2575,8 +2575,8 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
        * 390 px konkurrerade tio siffror med bokningsknappen om samma rad. */
       var ctaHtml =
         '<a class="jq-btn jq-btn--solid" href="/boka">Boka konsultation <span aria-hidden="true">→</span></a>' +
-        '<a class="jq-btn jq-btn--ghost-dark" href="tel:+46317135784" aria-label="Ring JQ.Klinik, 031-713 57 84">'
-        + '<span class="jq-tel-nr">031-713 57 84</span>'
+        '<a class="jq-btn jq-btn--ghost-dark" href="tel:+46317540004" aria-label="Ring JQ.Klinik, 031-754 00 04">'
+        + '<span class="jq-tel-nr">031-754 00 04</span>'
         + '<svg class="jq-tel-ikon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
         + '<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.4 2.1L8.1 9.9a16 16 0 0 0 6 6l1.4-1.4a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/>'
         + '</svg></a>';
@@ -2688,7 +2688,6 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
         { re: /\b(botox\s+ögonbrynslyft|ögonbrynslyft\s+botox)\b/i, url: "/behandling/botox-ogonbrynslyft" },
         { re: /\b(botox\s+kråksparkar|kråksparkar)\b/i, url: "/behandling/botox-kraksparkar" },
         { re: /\b(gummy\s+smile)\b/i, url: "/behandling/botox-gummy-smile" },
-        { re: /\b(svettbehandling|hyperhidros)\b/i, url: "/behandling/botox-svettbehandling" },
         { re: /\b(tear\s+trough)\b/i, url: "/behandling/filler-tear-trough" },
         { re: /\b(näskorrigering)\b/i, url: "/behandling/filler-naskorrigering" },
         { re: /\b(käklinje|jawline)\b/i, url: "/behandling/filler-kaklinje" },
@@ -2698,22 +2697,16 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
         { re: /\b(hakfiller|filler\s+i\s+hakan)\b/i, url: "/behandling/filler-haka" },
         { re: /\b(läppförstoring|läppfiller|läpp[- ]filler|fillers?\s+läppar)\b/i, url: "/behandling/filler-lappar" },
         { re: /\b(profhilo\s+structura)\b/i, url: "/behandling/profhilo-structura" },
-        { re: /\b(skinbooster\w*)\b/i, url: "/behandling/skinbooster" },
         { re: /\b(polynukleotid\w*|nucleofill|polyphil)\b/i, url: "/behandling/polynukleotider" },
         { re: /\b(rainbow\s+threads)\b/i, url: "/behandling/rainbow-threads" },
         { re: /\b(ultra\s*v\s*pdo)\b/i, url: "/behandling/ultra-v-pdo" },
         { re: /\b(hair\s*filler|hårfiller)\b/i, url: "/behandling/hair-filler" },
         { re: /\b(full\s*face)\b/i, url: "/behandling/fullface-holistisk-strategi" },
         { re: /\b(ansiktslyft utan kirurgi)\b/i, url: "/behandling/ansiktslyft-utan-kirurgi-goteborg" },
-        { re: /\b(biorepeel)\b/i, url: "/behandling/biorepeel" },
-        { re: /\b(prx[- ]?t33)\b/i, url: "/behandling/prx-t33" },
-        { re: /\b(ejal\s*40)\b/i, url: "/behandling/ejal-40" },
         { re: /\b(revok\s*50)\b/i, url: "/behandling/revok50" },
         { re: /\b(hyalase)\b/i, url: "/behandling/hyalase" },
         { re: /\b(sculptra)\b/i, url: "/behandling/sculptra" },
-        { re: /\b(sunekos)\b/i, url: "/behandling/sunekos" },
         { re: /\b(profhilo)\b/i, url: "/behandling/profhilo" },
-        { re: /\b(kemisk peeling)\b/i, url: "/behandling/kemisk-peeling" },
         { re: /\b(tr[åa]dlyft(?:et)?)\b/i, url: "/behandling/tradlyft" },
         // — breda sist —
         /* Rättat 2026-08-01: /fillers är en 301 och /botox en tunn
@@ -2854,7 +2847,7 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
       var html = '<section class="jq-sec jq-blog-hero"><div class="jq-wrap">'
         + '<span class="jq-eyebrow">Journal</span>'
         + '<h1 class="jq-blog-hero-h">Insikter från<br><em>specialistkliniken.</em></h1>'
-        + '<p class="jq-blog-hero-lede">Forskningsbaserade artiklar om botox, fillers, regenerativ hudvård och trådlyft — skrivna av leg. specialisttandläkare med expertis i ansiktets anatomi.</p>'
+        + '<p class="jq-blog-hero-lede">Forskningsbaserade artiklar om botox, fillers, regenerativ hudvård och trådlyft, skrivna av leg. specialisttandläkare med expertis i ansiktets anatomi.</p>'
         + '<div class="jq-blog-hero-meta">'
         + '<span><b>' + posts.length + '</b> artiklar</span>'
         + '<span class="jq-blog-hero-dot" aria-hidden="true">·</span>'
