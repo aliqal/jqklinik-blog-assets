@@ -2281,6 +2281,41 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
       } catch (e) { return false; }
     }
 
+    /* NÄSTA BEHANDLING I EFTERVÅRDSINLÄGGEN (Ali 2026-10-03: "okey").
+     *
+     * GA4 28 dagar: eftervårdsinläggen gav cirka 600 besök och 0 som började
+     * boka. Läsarna är redan behandlade, så kortet i mitten frågar inte efter
+     * en ny konsultation utan erbjuder nästa behandling i god tid, med
+     * behandlingen förvald i bokningen. Slutblockets omdömesfråga står kvar. */
+    function nastaBehandling() {
+      try {
+        var h1 = document.querySelector('[data-hook="post-title"], h1');
+        var txt = ((h1 ? h1.textContent : "") + " " + decodeURIComponent(location.pathname)).toLowerCase();
+        if (/hyalase|löses upp|biverkning|risker|misstag/.test(txt)) return null;
+        if (/profhilo/.test(txt)) return { namn: "Profhilo", href: "/boka?service=cb50eca6-f761-4e32-9095-8cf5853bf7b2",
+          text: "Profhilo ges som en kur med två behandlingar fyra veckor isär, och sedan ungefär var sjätte månad för att behålla resultatet." };
+        if (/botox|rynk/.test(txt)) return { namn: "botox", href: "/boka?service=8ee5f548-d033-4578-b5b3-d7cf0c09cef5",
+          text: "Effekten av botox håller i regel 3 till 4 månader. Boka nästa behandling i god tid, så får du en tid som passar dig." };
+        if (/filler/.test(txt)) return { namn: "fillers", href: "/boka",
+          text: "Fillers håller olika länge beroende på område, ofta 9 till 12 månader. Vill du fylla på eller se över resultatet bokar du en tid här." };
+        return null;
+      } catch (e) { return null; }
+    }
+
+    function nastaKortHtml(n, kampanj) {
+      return '<div class="jq-mid-cta jq-nasta-cta">'
+        + '<div class="jq-mid-cta-row">'
+        + '<span class="jq-mid-cta-fig"><img src="' + JQ_PORTRAIT + '" alt="Jilah Qaljaee, leg. specialisttandläkare" loading="lazy" decoding="async" width="296" height="370"></span>'
+        + '<div class="jq-mid-cta-body">'
+        + '<span class="jq-mid-cta-eyebrow">Efter din behandling</span>'
+        + '<p class="jq-mid-cta-t">Dags för <em>nästa</em> behandling?</p>'
+        + '<p class="jq-mid-cta-sub">' + n.text + (kampanj ? ' Just nu 15 % på ' + kampanj + ' till 31 oktober.' : '') + '</p>'
+        + '<div class="jq-mid-cta-btns">'
+        + '<a class="jq-mid-cta-btn jq-mid-cta-btn--primary" href="' + n.href + '" data-jq-nasta="1">Boka nästa behandling<span class="jq-arw" aria-hidden="true">&rarr;</span></a>'
+        + '<a class="jq-mid-cta-btn jq-mid-cta-btn--secondary" href="tel:+46317540004">031-754 00 04</a>'
+        + '</div></div></div></div>';
+    }
+
     function injectExtras() {
       if (document.getElementById("jq-blog-extra")) return;
       const whyHtml = '<section class="jq-sec jq-blog-why"><div class="jq-wrap">'
@@ -2405,6 +2440,22 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
        * Quizet finns kvar som andraknapp i samma kort. */
       var kampanj = kampanjensBehandling();
       var cta = document.createElement("div");
+      /* Eftervårdsinlägg: nästa behandling i stället för kampanj eller quiz. */
+      var nasta = arEftervardsinlagg() ? nastaBehandling() : null;
+      if (nasta) {
+        cta.className = "jq-mid-cta-holder";
+        cta.innerHTML = nastaKortHtml(nasta, kampanj);
+        try {
+          insertAfter.parentNode.insertBefore(cta, insertAfter.nextSibling);
+          jqPromo("blog_nasta_cta", cta.querySelector(".jq-nasta-cta"));
+          var nl = cta.querySelector("a[data-jq-nasta]");
+          if (nl) nl.addEventListener("click", function () {
+            try { (window.gtag || function () {})("event", "select_promotion", { promotion_name: "blog_nasta_cta" }); } catch (e) {}
+            try { fetch("/_functions/promoEvent", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ name: "blog_nasta_cta", type: "click" }), keepalive: true }).catch(function () {}); } catch (e) {}
+          });
+        } catch (e) { console.error("[JQ.blog] nästa behandling:", e); }
+        return;
+      }
       if (kampanj) {
         cta.className = "jq-mid-cta-holder";
         cta.innerHTML = kampanjKortHtml(kampanj);
