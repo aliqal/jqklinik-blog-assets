@@ -1759,7 +1759,9 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
        * returnerar direkt om blocket redan finns), så vi kallar den tills
        * den får fäste. jqPromo dedupar per session, så räknaren blåses
        * inte upp av omförsöken. */
+      jqSparaCtaKlick();
       injectExtras();
+      jqUppgraderBokaLankar();
       var extraForsok = 0;
       var extraTimer = setInterval(function () {
         extraForsok++;
@@ -1788,6 +1790,7 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
             try { injectEyebrows(); } catch(e) {}
             try { injectMidArticleCta(); } catch(e) {}
             try { injectKeywordLinks(); } catch(e) {}
+            try { jqUppgraderBokaLankar(); } catch(e) {}
             try { buildToc(); } catch(e) {}
             // Re-injection watcher: Wix re-renderar och tar bort våra element.
             // Kollar var 1s i 30s + MutationObserver för instant re-inject.
@@ -2273,6 +2276,102 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
         + '</div></div></div></div>';
     }
 
+    /* BEHANDLINGEN FÖRVALD I BOKNINGEN, PÅ ALLA INLÄGG (2026-11-27).
+     *
+     * Eftervårdsinläggen fick det 3 oktober (nastaBehandling nedan). Resten
+     * av bloggen pekade fortfarande på /boka utan vald behandling, och det är
+     * där trafiken ligger: mätt 28 dygn t.o.m. 25 november bär /post/* 1 177
+     * av sajtens 1 423 organiska klick (81 %). De sessionerna öppnar
+     * bokningen i 1,2 % av fallen mot 14 % för en behandlingssida.
+     *
+     * /boka?service=<uuid> förväljer behandlingen och rullar till tiderna
+     * (Bokning.tsx rad 1135 och 1685). Inspelningarna 5/10 till 3/11 visade
+     * att de flesta som valt behandling lämnade innan tiderna syntes, så ett
+     * steg mindre är hela poängen.
+     *
+     * Id:n lästa ur Wix Bookings 2026-11-27, alla 20 kontrollerade mot live.
+     * Ingen träff ger /boka precis som förut, aldrig en trasig länk.
+     * Avsiktligt INGEN generisk filler-rad: ett inlägg som bara säger
+     * "fillers" ska inte förvälja Midface 5ml, som är ett dyrt paket. */
+    var JQ_TJANSTER = [
+      { re: /toxinfri|utan botox|alternativ till botox/i,       id: null },
+      { re: /profhilo[-\s]?structura/i,                         id: "21f87038-ffca-42a9-abaf-e689186c3352" },
+      { re: /profhilo/i,                                         id: "cb50eca6-f761-4e32-9095-8cf5853bf7b2" },
+      { re: /ögonbrynslyft|brynlyft/i,                           id: "ac71bda6-c4d1-465f-ac01-632cc5461297" },
+      { re: /masseter|käklinj|jawline|tandgniss|käkslip/i,        id: "d27b87bf-4056-4b3d-94a2-f732c843b70e" },
+      { re: /tear[-\s]?trough|under ögonen|mörka ringar/i,       id: "bb2d68f0-3e94-4f04-a704-e5a63a7e6596" },
+      { re: /nasolabial|marionettlinj/i,                         id: "6b804159-817c-47a6-b4d9-ec19ecbc28e9" },
+      { re: /sura mungipor/i,                                    id: "982cbbef-b680-4634-9cb7-776d51601d34" },
+      { re: /näskorrig|näsplastik/i,                             id: "da2694f8-01ce-4d42-ab39-c32b526d12f9" },
+      { re: /kindben|kinder/i,                                   id: "c904314a-4945-48ff-b418-c156875eb89c" },
+      { re: /tinning/i,                                          id: "fcee3856-5825-4ed2-9044-390cad940f77" },
+      { re: /läpp|lip[-\s]?(filler|flip)/i,                      id: "ea8886c2-0f48-4293-9275-be240f4a07b7" },
+      { re: /trådlyft|tradlyft|pdo[-\s]?tråd|trådar/i,            id: "a410326d-7d7b-4a60-9dca-c1e7e79f029a" },
+      { re: /hair[-\s]?filler|håravfall|tunt hår|prp[-\s]?hår/i,  id: "6637a788-25dd-432e-9a74-f325e92efc99" },
+      { re: /polynukleotid|rejuran|lax[-\s]?dna|fiskspermie/i,    id: "0cc8b184-9dca-478a-a2e5-6209e5823fef" },
+      { re: /sculptra/i,                                         id: "c90e942a-7743-4e9a-9e33-b8967644d3d5" },
+      { re: /hyalase|lösa upp filler/i,                          id: "c204a892-5f3b-45b9-8310-f4b15ad05b77" },
+      { re: /ultracol|ultra[-\s]?v/i,                            id: "e144ed55-22a5-4397-8433-d8ba1f44d378" },
+      { re: /revok/i,                                            id: "a7fee711-1676-47f8-9973-fdf440351fe0" },
+      { re: /fullface|full face/i,                               id: "6d3a3fcb-ae77-4592-93bc-cee125a374ee" },
+      { re: /botox|rynk|kråksparkar|svett|gummy smile/i,          id: "8ee5f548-d033-4578-b5b3-d7cf0c09cef5" }
+    ];
+
+    var _jqTjanst;
+    function jqTjanstId() {
+      if (_jqTjanst !== undefined) return _jqTjanst;
+      _jqTjanst = null;
+      try {
+        var h1 = document.querySelector('[data-hook="post-title"], h1');
+        var txt = ((h1 ? h1.textContent : "") + " " + decodeURIComponent(location.pathname));
+        for (var i = 0; i < JQ_TJANSTER.length; i++) {
+          if (JQ_TJANSTER[i].re.test(txt)) { _jqTjanst = JQ_TJANSTER[i].id || null; break; }
+        }
+      } catch (e) {}
+      return _jqTjanst;
+    }
+
+    function jqBokaUrl() {
+      var id = jqTjanstId();
+      return id ? "/boka?service=" + id : "/boka";
+    }
+
+    /** Brödtextens egna /boka-länkar finns först när Wix renderat innehållet,
+     *  så den här körs efter injektionerna och efter retry-slingan. */
+    function jqUppgraderBokaLankar() {
+      var id = jqTjanstId();
+      if (!id) return;
+      try {
+        var l = document.querySelectorAll('a[href="/boka"], a[href="https://www.jqklinik.se/boka"]');
+        for (var i = 0; i < l.length; i++) {
+          l[i].setAttribute("href", "/boka?service=" + id);
+          l[i].setAttribute("data-jq-tjanst", "1");
+        }
+      } catch (e) {}
+    }
+
+    /** Utan mätning vet vi inte om det här hjälpte. Delegerad lyssnare,
+     *  ingen inline-onclick (Wix CSP). */
+    function jqSparaCtaKlick() {
+      if (window.__jqBloggCtaSpar) return;
+      window.__jqBloggCtaSpar = true;
+      document.addEventListener("click", function (ev) {
+        try {
+          var a = ev.target && ev.target.closest && ev.target.closest('a[href^="/boka"], a[href^="tel:"]');
+          if (!a) return;
+          var h = a.getAttribute("href") || "";
+          (window.gtag || function () {})("event", "blogg_cta_klick", {
+            plats: a.closest(".jq-mid-cta") ? "mitt_i_artikeln"
+                 : a.closest(".jq-blog-cta") ? "slutet"
+                 : a.closest("[data-hook='post-content']") ? "i_texten" : "annat",
+            cta_typ: h.indexOf("tel:") === 0 ? "telefon" : "boka",
+            forvald: h.indexOf("service=") > -1 ? "ja" : "nej",
+            tjanst: jqTjanstId() || "ingen"
+          });
+        } catch (e) {}
+      }, true);
+    }
+
     function arEftervardsinlagg() {
       try {
         var h1 = document.querySelector('[data-hook="post-title"], h1');
@@ -2346,7 +2445,7 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
         + '<div class="jq-blog-cta-meta"><span>1 minut</span><span>8 frågor</span><span>1 000 kr värdecheck</span></div>'
         + '<div class="jq-blog-cta-btns">'
         + '<a class="jq-btn jq-btn--solid" href="/hitta-din-behandling">Gör quizet<span class="jq-arw" aria-hidden="true">&rarr;</span></a>'
-        + '<a class="jq-btn jq-btn--ghost" href="/boka">Boka konsultation</a>'
+        + '<a class="jq-btn jq-btn--ghost" href="' + jqBokaUrl() + '">Boka konsultation</a>'
         + '</div></div></div></section>';
       const ctaHtml = eftervard ? omdomeHtml : bokaHtml;
       const relatedShell = isPost ? '<section class="jq-sec jq-blog-related-sec" id="jq-blog-related-shell"></section>' : '';
