@@ -1761,7 +1761,7 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
        * inte upp av omförsöken. */
       jqSparaCtaKlick();
       injectExtras();
-      jqUppgraderBokaLankar();
+      jqStartaLankuppgradering();
       var extraForsok = 0;
       var extraTimer = setInterval(function () {
         extraForsok++;
@@ -2336,8 +2336,20 @@ html body [data-hook="post-page-root"] [data-hook="time-to-read"] {
       return id ? "/boka?service=" + id : "/boka";
     }
 
-    /** Brödtextens egna /boka-länkar finns först när Wix renderat innehållet,
-     *  så den här körs efter injektionerna och efter retry-slingan. */
+    /** MÄTT 2026-11-27: ett engångsanrop hann bara 2 av 5 länkar på
+     *  masseter-inlägget. Brödtextens länkar kommer med Wix innehåll och
+     *  mitten-CTA:n med sin egen retry-slinga, så en enda körning förlorar
+     *  kapplöpningen. Därför upprepas den en bunden tid, som extraTimer. */
+    function jqStartaLankuppgradering() {
+      jqUppgraderBokaLankar();
+      var n = 0;
+      var timer = setInterval(function () {
+        n++;
+        jqUppgraderBokaLankar();
+        if (n >= 30) clearInterval(timer);          // 30 × 500 ms = 15 s
+      }, 500);
+    }
+
     function jqUppgraderBokaLankar() {
       var id = jqTjanstId();
       if (!id) return;
